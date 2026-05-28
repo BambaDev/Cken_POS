@@ -258,9 +258,20 @@ namespace cypos
                     il.ColorDepth = ColorDepth.Depth32Bit;
                     il.TransparentColor = Color.Transparent;
                     il.ImageSize = new Size(78, 80);
-                    il.Images.Add(Image.FromFile(img_directory + dataReader["image_name"]));
-                   
-                    btnItem.Image = il.Images[0];
+
+                    // Load image with error handling
+                    string imagePath = img_directory + dataReader["image_name"].ToString();
+                    if (File.Exists(imagePath))
+                    {
+                        il.Images.Add(Image.FromFile(imagePath));
+                        btnItem.Image = il.Images[0];
+                    }
+                    else
+                    {
+                        // Use default image if file not found
+                        il.Images.Add(Properties.Resources.no_image);
+                        btnItem.Image = il.Images[0];
+                    }
                     btnItem.Margin = new Padding(3, 3, 3, 3);
                     btnItem.Size = new Size(125, 125);
 
@@ -546,18 +557,18 @@ namespace cypos
             }
 
             // SÉCURISÉ : Utilise SqlParameter pour item_code
-            string strSQL = "SELECT item_code, item_name , selling_price, 1.00  AS qty, (selling_price * 1.00 ) * 1.00  as 'amount', " +
-                    " (((selling_price * 1.00 ) * discount) / 100.00) as 'discount_amount' , " +
+            string strSQL = "SELECT item_code, item_name, selling_price, 1.00 AS qty, (selling_price * 1.00) * 1.00 as 'amount', " +
+                    " (((selling_price * 1.00) * discount) / 100.00) as 'discount_amount', " +
                     " CASE " +
-                    " WHEN tax_apply = 1 THEN   (((selling_price * 1.00 )  - (((selling_price * 1.00 ) * discount) / 100.00))  * " + lblTax1Rate.Text + " ) / 100.00   " +
-                    " ELSE '0.00'  " +
-                    " END 'tax1_amount' ," +
+                    " WHEN tax_apply = 1 THEN (((selling_price * 1.00) - (((selling_price * 1.00) * discount) / 100.00)) * " + lblTax1Rate.Text + ") / 100.00 " +
+                    " ELSE '0.00' " +
+                    " END 'tax1_amount', " +
                     " CASE " +
-                    " WHEN tax_apply = 1 THEN   ((selling_price * 1.00 )  - (((selling_price * 1.00 ) * discount) / 100.00))" +
-                    " ELSE '0.00'  " +
-                    " END 'tax2_base' ," +
-                    " discount , tax_apply,show_kitchen,stock_item,stock_quantity,print_kot " +
-                    " FROM  tbl_Item  WHERE item_code = @itemCode and active = 1 ";
+                    " WHEN tax_apply = 1 THEN ((selling_price * 1.00) - (((selling_price * 1.00) * discount) / 100.00)) " +
+                    " ELSE '0.00' " +
+                    " END 'tax2_base', " +
+                    " discount, tax_apply, show_kitchen, stock_item, stock_quantity, print_kot " +
+                    " FROM tbl_Item WHERE item_code = @itemCode and active = 1";
 
             System.Data.SqlClient.SqlParameter[] parameters = {
                 new System.Data.SqlClient.SqlParameter("@itemCode", System.Data.SqlDbType.NVarChar, 50) { Value = btnClicked.Tag.ToString() }

@@ -100,10 +100,20 @@ namespace cypos
                     il.ColorDepth = ColorDepth.Depth32Bit;
                     il.TransparentColor = Color.Transparent;
                     il.ImageSize = new Size(32, 32);
-                    il.Images.Add(Image.FromFile(img_directory + dataReader["image_name"]));
 
-
-                    b.Image = il.Images[0];
+                    // Load image with error handling
+                    string imagePath = img_directory + dataReader["image_name"].ToString();
+                    if (File.Exists(imagePath))
+                    {
+                        il.Images.Add(Image.FromFile(imagePath));
+                        b.Image = il.Images[0];
+                    }
+                    else
+                    {
+                        // Use default image from resources if image file not found
+                        il.Images.Add(Properties.Resources.no_image);
+                        b.Image = il.Images[0];
+                    }
                     b.Margin = new Padding(3, 3, 3, 3);
 
                     b.Size = new Size(150, 50);
@@ -170,9 +180,22 @@ namespace cypos
             cmbCategory.SelectedValue =int.Parse(dtItem.Rows[0]["category_id"].ToString());
 
             lblImageName.Text = dtItem.Rows[0]["image_name"].ToString();
-            string strImagePath = Application.StartupPath + @"\ItemImages\" + dtItem.Rows[0]["image_name"].ToString() + "";
-            pbxItemImage.ImageLocation = strImagePath;
-            pbxItemImage.InitialImage.Dispose();
+            string strImagePath = Application.StartupPath + @"\ItemImages\" + dtItem.Rows[0]["image_name"].ToString();
+
+            // Load image with error handling
+            if (File.Exists(strImagePath))
+            {
+                pbxItemImage.ImageLocation = strImagePath;
+                if (pbxItemImage.InitialImage != null)
+                {
+                    pbxItemImage.InitialImage.Dispose();
+                }
+            }
+            else
+            {
+                // Use default image if file not found
+                pbxItemImage.Image = Properties.Resources.no_image;
+            }
             
             cbxTaxable.Checked = Convert.ToBoolean(dtItem.Rows[0]["tax_apply"]) ? true : false;
             cbxKitchenDisplay.Checked = Convert.ToBoolean(dtItem.Rows[0]["show_kitchen"]) ? true : false;
