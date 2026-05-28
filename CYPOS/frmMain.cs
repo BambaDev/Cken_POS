@@ -876,7 +876,7 @@ namespace cypos
             {
                 totalsum += Convert.ToDouble(dgvItemList.Rows[i].Cells["clmAmount"].Value);
             }
-            lblTotal.Text = Math.Round(totalsum, 2).ToString("N2");
+            lblTotal.Text = Currency.Format(totalsum);
             tssTotalItems.Text ="Total Item(s) : " + dgvItemList.RowCount.ToString();
             
             //Discount amount sum
@@ -890,7 +890,7 @@ namespace cypos
             DisCount = Math.Round(DisCount, 2);
             double sum = total - DisCount;
             sum = Math.Round(sum, 2);
-            lblSubtotal.Text = sum.ToString("N2");
+            lblSubtotal.Text = Currency.Format(sum);
             //Service Charge
             double dblScRate = Settings.ServiceChargeRate;
             double dblServiceCharge = 0;
@@ -907,9 +907,9 @@ namespace cypos
 
             double payable = sum + tax1Value + tax2Value + dblServiceCharge;
             payable = Math.Round(payable,2);
-            lblTotalPayable.Text = payable.ToString("N2");
-            lblTotalDiscount.Text = DisCount.ToString("N2");
-            lblOverallDiscount.Text = DisCount.ToString("N2");
+            lblTotalPayable.Text = Currency.Format(payable);
+            lblTotalDiscount.Text = Currency.Format(DisCount);
+            lblOverallDiscount.Text = Currency.Format(DisCount);
         }
 
         public void TaxCalculation()
@@ -925,7 +925,7 @@ namespace cypos
             }
 
             Tax1 = Math.Round(Tax1, 2);
-            lblTotalTax1.Text = Tax1.ToString("N2");
+            lblTotalTax1.Text = Currency.Format(Tax1);
 
             //Tax 2 amount
             double Tax2 = 0.00;
@@ -935,7 +935,7 @@ namespace cypos
             }
 
             Tax2 = Math.Round(Tax2, 2);
-            lblTotalTax2.Text = Tax2.ToString("N2");
+            lblTotalTax2.Text = Currency.Format(Tax2);
 
             double dblScRate=Settings.ServiceChargeRate;
             double dblServiceCharge=0;
@@ -945,8 +945,8 @@ namespace cypos
             }
             double dblPayable = Subtotal + Tax1 + Tax2 + dblServiceCharge;
             dblPayable = Math.Round(dblPayable, 2);
-            lblScAmount.Text = dblServiceCharge.ToString("N2");
-            lblTotalPayable.Text = dblPayable.ToString("N2");
+            lblScAmount.Text = Currency.Format(dblServiceCharge);
+            lblTotalPayable.Text = Currency.Format(dblPayable);
         }
         
         
@@ -1074,7 +1074,7 @@ namespace cypos
 
                 double payable = subtotalafteroveralldiscount + SafeParseLabel(lblTotalTax1.Text);
                 payable = Math.Round(payable, 2);
-                lblTotalPayable.Text = payable.ToString("N2");
+                lblTotalPayable.Text = Currency.Format(payable);
             }
         }
 
@@ -1772,7 +1772,7 @@ namespace cypos
 
                     // show total price   Qty  * Price
                     double dblTotalPrice = dblQty * dblPrice;
-                    row.Cells["clmAmount"].Value = dblTotalPrice.ToString("N2");
+                    row.Cells["clmAmount"].Value = Currency.Format(dblTotalPrice);
 
                     if (Convert.ToDouble(row.Cells["clmDiscountRate"].Value) != 0)
                     {
@@ -2522,8 +2522,8 @@ namespace cypos
                 double dblDiscRate = double.Parse(dgvItemList.Rows[row.Index].Cells["clmDiscountRate"].Value.ToString());
                 double dblQty = double.Parse(dgvItemList.Rows[row.Index].Cells["clmQty"].Value.ToString());
                 double dblAmount = dblQty * dblPrice;
-                dgvItemList.Rows[row.Index].Cells["clmPrice"].Value = dblPrice.ToString("N2");
-                dgvItemList.Rows[row.Index].Cells["clmAmount"].Value = dblAmount.ToString("N2");
+                dgvItemList.Rows[row.Index].Cells["clmPrice"].Value = Currency.Format(dblPrice);
+                dgvItemList.Rows[row.Index].Cells["clmAmount"].Value = Currency.Format(dblAmount);
 
                 bool isTaxApply = Convert.ToBoolean(dgvItemList.Rows[row.Index].Cells["clmTaxApply"].Value);
                 
@@ -2924,10 +2924,10 @@ namespace cypos
                     {
                         dblServiceCharge = (dblAfterSubTotal / 100) * dblScRate;
                     }
-                    lblScAmount.Text = dblServiceCharge.ToString("N2");
+                    lblScAmount.Text = Currency.Format(dblServiceCharge);
                     double dblPayable = dblAfterSubTotal + SafeParseLabel(lblTotalTax1.Text) + SafeParseLabel(lblTotalTax2.Text) + dblServiceCharge;
                     dblPayable = Math.Round(dblPayable, 2);
-                    lblTotalPayable.Text = dblPayable.ToString("N2");
+                    lblTotalPayable.Text = Currency.Format(dblPayable);
                 }
             }
             catch

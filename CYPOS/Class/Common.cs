@@ -494,4 +494,72 @@ namespace cypos
             }
         }
     }
+
+    public static class Currency
+    {
+        /// <summary>
+        /// Formate un montant en Francs CFA sans décimales
+        /// </summary>
+        /// <param name="amount">Montant à formater</param>
+        /// <returns>Format: "5 000 FCFA" avec espace comme séparateur de milliers</returns>
+        public static string Format(decimal amount)
+        {
+            // Arrondir au Franc le plus proche (pas de centimes en FCFA)
+            decimal rounded = Math.Round(amount, 0, MidpointRounding.AwayFromZero);
+            // Format avec espace comme séparateur de milliers (N0 = pas de décimales)
+            return rounded.ToString("N0") + " FCFA";
+        }
+
+        /// <summary>
+        /// Formate un montant double en Francs CFA sans décimales
+        /// </summary>
+        public static string Format(double amount)
+        {
+            return Format(Convert.ToDecimal(amount));
+        }
+
+        /// <summary>
+        /// Parse une chaîne en decimal avec arrondi automatique
+        /// Supporte formats français (virgule) et anglais (point)
+        /// </summary>
+        /// <param name="text">Texte à parser (ex: "5000,50" ou "5000.50" ou "5 000 FCFA")</param>
+        /// <returns>Decimal arrondi (ex: 5001)</returns>
+        public static decimal Parse(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return 0;
+
+            // Enlever "FCFA" et espaces multiples
+            text = text.Replace("FCFA", "").Replace("F CFA", "").Trim();
+            // Enlever les espaces (séparateurs de milliers)
+            text = text.Replace(" ", "");
+
+            decimal result = 0;
+            // Essayer de parser avec la culture courante (supporte virgule ET point)
+            if (decimal.TryParse(text, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.CurrentCulture, out result))
+            {
+                // Arrondir au Franc le plus proche
+                return Math.Round(result, 0, MidpointRounding.AwayFromZero);
+            }
+
+            // Si échec avec CurrentCulture, essayer InvariantCulture (point décimal)
+            if (decimal.TryParse(text, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out result))
+            {
+                return Math.Round(result, 0, MidpointRounding.AwayFromZero);
+            }
+
+            return 0;
+        }
+
+        /// <summary>
+        /// Formate un montant sans le suffixe FCFA (pour TextBox pendant saisie)
+        /// </summary>
+        public static string FormatInput(decimal amount)
+        {
+            decimal rounded = Math.Round(amount, 0, MidpointRounding.AwayFromZero);
+            return rounded.ToString("N0");
+        }
+    }
 }
