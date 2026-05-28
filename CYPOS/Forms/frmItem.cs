@@ -880,5 +880,24 @@ namespace cypos
             frmCurrencyboard frmCurrencyboard = new frmCurrencyboard(txtDiscount);
             frmCurrencyboard.ShowDialog();
         }
+
+        // Arrondi automatique au format Franc CFA (sans décimales)
+        private void txtSellingPrice_Leave(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrWhiteSpace(txtSellingPrice.Text))
+            {
+                decimal rounded = Currency.Parse(txtSellingPrice.Text);
+                txtSellingPrice.Text = Currency.FormatInput(rounded);
+            }
+        }
+
+        private void txtCostPrice_Leave(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrWhiteSpace(txtCostPrice.Text))
+            {
+                decimal rounded = Currency.Parse(txtCostPrice.Text);
+                txtCostPrice.Text = Currency.FormatInput(rounded);
+            }
+        }
     }
 }

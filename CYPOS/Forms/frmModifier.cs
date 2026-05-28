@@ -436,5 +436,15 @@ namespace cypos
             frmKeyboard frmKeyboard = new frmKeyboard(txtModifierName);
             frmKeyboard.ShowDialog();
         }
+
+        // Arrondi automatique au format Franc CFA (sans décimales)
+        private void txtPrice_Leave(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrWhiteSpace(txtPrice.Text))
+            {
+                decimal rounded = Currency.Parse(txtPrice.Text);
+                txtPrice.Text = Currency.FormatInput(rounded);
+            }
+        }
     }
 }

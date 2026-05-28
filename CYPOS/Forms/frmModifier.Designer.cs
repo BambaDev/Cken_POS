@@ -405,6 +405,7 @@
             this.txtPrice.Size = new System.Drawing.Size(125, 23);
             this.txtPrice.TabIndex = 186;
             this.txtPrice.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtPrice_KeyPress);
+            this.txtPrice.Leave += new System.EventHandler(this.txtPrice_Leave);
             // 
             // groupBox1
             // 

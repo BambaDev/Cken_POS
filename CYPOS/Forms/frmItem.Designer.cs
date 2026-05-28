@@ -155,6 +155,7 @@
             this.txtSellingPrice.Size = new System.Drawing.Size(125, 23);
             this.txtSellingPrice.TabIndex = 4;
             this.txtSellingPrice.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtSellingPrice_KeyPress);
+            this.txtSellingPrice.Leave += new System.EventHandler(this.txtSellingPrice_Leave);
             // 
             // label8
             // 
@@ -591,6 +592,7 @@
             this.txtCostPrice.Size = new System.Drawing.Size(125, 23);
             this.txtCostPrice.TabIndex = 189;
             this.txtCostPrice.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtCostPrice_KeyPress);
+            this.txtCostPrice.Leave += new System.EventHandler(this.txtCostPrice_Leave);
             // 
             // label5
             // 
