@@ -556,22 +556,27 @@ namespace cypos
                 lblTax2Rate.Visible = true;
             }
 
-            // SÉCURISÉ : Utilise SqlParameter pour item_code
+            // SÉCURISÉ : Utilise SqlParameter pour item_code et tax1Rate
+            // Convertir tax1Rate en decimal pour SQL
+            decimal tax1Rate = 0;
+            decimal.TryParse(lblTax1Rate.Text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out tax1Rate);
+
             string strSQL = "SELECT item_code, item_name, selling_price, 1.00 AS qty, (selling_price * 1.00) * 1.00 as 'amount', " +
                     " (((selling_price * 1.00) * discount) / 100.00) as 'discount_amount', " +
                     " CASE " +
-                    " WHEN tax_apply = 1 THEN (((selling_price * 1.00) - (((selling_price * 1.00) * discount) / 100.00)) * " + lblTax1Rate.Text + ") / 100.00 " +
-                    " ELSE '0.00' " +
+                    " WHEN tax_apply = 1 THEN (((selling_price * 1.00) - (((selling_price * 1.00) * discount) / 100.00)) * @tax1Rate) / 100.00 " +
+                    " ELSE 0.00 " +
                     " END 'tax1_amount', " +
                     " CASE " +
                     " WHEN tax_apply = 1 THEN ((selling_price * 1.00) - (((selling_price * 1.00) * discount) / 100.00)) " +
-                    " ELSE '0.00' " +
+                    " ELSE 0.00 " +
                     " END 'tax2_base', " +
                     " discount, tax_apply, show_kitchen, stock_item, stock_quantity, print_kot " +
                     " FROM tbl_Item WHERE item_code = @itemCode and active = 1";
 
             System.Data.SqlClient.SqlParameter[] parameters = {
-                new System.Data.SqlClient.SqlParameter("@itemCode", System.Data.SqlDbType.NVarChar, 50) { Value = btnClicked.Tag.ToString() }
+                new System.Data.SqlClient.SqlParameter("@itemCode", System.Data.SqlDbType.NVarChar, 50) { Value = btnClicked.Tag.ToString() },
+                new System.Data.SqlClient.SqlParameter("@tax1Rate", System.Data.SqlDbType.Decimal) { Value = tax1Rate }
             };
 
             DataTable dt = SecureDataAccess.GetDataTable(strSQL, parameters);
@@ -736,22 +741,27 @@ namespace cypos
             lblCustomerId.Text = dtHeader.Rows[0]["customer_id"].ToString();
             btnSelectedCustomer.Text = "Customer" + Environment.NewLine + dtHeader.Rows[0]["customer"].ToString();
 
-            // SÉCURISÉ : Utilise SqlParameter pour header_id
-            string strSQL = "SELECT item_code, item_name , selling_price, qty, (selling_price * qty ) AS 'amount', " +
-                            " (((selling_price * qty ) * discount) / 100.00) as 'discount_amount' , " +
+            // SÉCURISÉ : Utilise SqlParameter pour header_id et tax1Rate
+            // Convertir tax1Rate en decimal pour SQL
+            decimal tax1RateRecall = 0;
+            decimal.TryParse(lblTax1Rate.Text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out tax1RateRecall);
+
+            string strSQL = "SELECT item_code, item_name, selling_price, qty, (selling_price * qty) AS 'amount', " +
+                            " (((selling_price * qty) * discount) / 100.00) as 'discount_amount', " +
                             " CASE " +
-                            " WHEN tax_apply = 1 THEN   (((selling_price * qty )  - (((selling_price * qty ) * discount) / 100.00))  * " + lblTax1Rate.Text + " ) / 100.00   " +
-                            " ELSE '0.00'  " +
-                            " END 'tax1_amount' ," +
+                            " WHEN tax_apply = 1 THEN (((selling_price * qty) - (((selling_price * qty) * discount) / 100.00)) * @tax1Rate) / 100.00 " +
+                            " ELSE 0.00 " +
+                            " END 'tax1_amount', " +
                             " CASE " +
-                            " WHEN tax_apply = 1 THEN   ((selling_price * qty )  - (((selling_price * qty ) * discount) / 100.00))" +
-                            " ELSE '0.00'  " +
-                            " END 'tax2_base' ," +
-                            " discount ,discount_amount, tax_apply,show_kitchen,print_kot,kot_qty" +
-                            " FROM   tbl_TempDetail  WHERE header_id = @headerId";
+                            " WHEN tax_apply = 1 THEN ((selling_price * qty) - (((selling_price * qty) * discount) / 100.00)) " +
+                            " ELSE 0.00 " +
+                            " END 'tax2_base', " +
+                            " discount, discount_amount, tax_apply, show_kitchen, print_kot, kot_qty " +
+                            " FROM tbl_TempDetail WHERE header_id = @headerId";
 
             System.Data.SqlClient.SqlParameter[] parametersDetail = {
-                new System.Data.SqlClient.SqlParameter("@headerId", System.Data.SqlDbType.Int) { Value = holdId }
+                new System.Data.SqlClient.SqlParameter("@headerId", System.Data.SqlDbType.Int) { Value = holdId },
+                new System.Data.SqlClient.SqlParameter("@tax1Rate", System.Data.SqlDbType.Decimal) { Value = tax1RateRecall }
             };
 
             DataTable dt = SecureDataAccess.GetDataTable(strSQL, parametersDetail);
