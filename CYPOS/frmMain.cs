@@ -77,6 +77,15 @@ namespace cypos
         // The taskbar's window handle.
         private IntPtr TaskbarHWnd, StartButtonHWnd;
         #endregion
+
+        // Helper method pour conversion sécurisée des labels formatés (N2)
+        private double SafeParseLabel(string labelText)
+        {
+            double result = 0;
+            double.TryParse(labelText, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, out result);
+            return result;
+        }
+
         public frmMain()
         {
             InitializeComponent();
@@ -890,7 +899,13 @@ namespace cypos
                 dblServiceCharge = (sum / 100) * dblScRate;
             }
 
-            double payable = sum + Convert.ToDouble(lblTotalTax1.Text) + Convert.ToDouble(lblTotalTax2.Text) + dblServiceCharge;
+            // Conversion sécurisée des taxes depuis les labels formatés
+            double tax1Value = 0;
+            double tax2Value = 0;
+            double.TryParse(lblTotalTax1.Text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, out tax1Value);
+            double.TryParse(lblTotalTax2.Text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, out tax2Value);
+
+            double payable = sum + tax1Value + tax2Value + dblServiceCharge;
             payable = Math.Round(payable,2);
             lblTotalPayable.Text = payable.ToString("N2");
             lblTotalDiscount.Text = DisCount.ToString("N2");
@@ -899,7 +914,8 @@ namespace cypos
 
         public void TaxCalculation()
         {
-            double Subtotal = Convert.ToDouble(lblSubtotal.Text);            
+            double Subtotal = 0;
+            double.TryParse(lblSubtotal.Text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, out Subtotal);            
 
             //Tax 1 amount
             double Tax1 = 0.00;
@@ -1044,19 +1060,19 @@ namespace cypos
             }
             else
             {
-                double Discountvalue = Convert.ToDouble(txtDiscountRate.Text) - 1;
+                double Discountvalue = SafeParseLabel(txtDiscountRate.Text) - 1;
                 txtDiscountRate.Text = Discountvalue.ToString();
-                double subtotal = Convert.ToDouble(lblTotal.Text) - Convert.ToDouble(lblTotalDiscount.Text); // total - item discount  100 - 5 = 95        
-                double totaldiscount = (subtotal * Discountvalue) / 100;  //Counter discount  // 95 * 5 /100 = 4.75  
-                double disPlusOverallDiscount = totaldiscount + Convert.ToDouble(lblTotalDiscount.Text); // 4.75 + 5 = 9.75
+                double subtotal = SafeParseLabel(lblTotal.Text) - SafeParseLabel(lblTotalDiscount.Text); // total - item discount  100 - 5 = 95
+                double totaldiscount = (subtotal * Discountvalue) / 100;  //Counter discount  // 95 * 5 /100 = 4.75
+                double disPlusOverallDiscount = totaldiscount + SafeParseLabel(lblTotalDiscount.Text); // 4.75 + 5 = 9.75
                 disPlusOverallDiscount = Math.Round(disPlusOverallDiscount, 2);
                 lblOverallDiscount.Text = disPlusOverallDiscount.ToString();  // Overall discount 9.75
 
                 double subtotalafteroveralldiscount = subtotal - totaldiscount; // 95 - 4.75 = 90.25
                 subtotalafteroveralldiscount = Math.Round(subtotalafteroveralldiscount, 2);
                 lblSubtotal.Text = subtotalafteroveralldiscount.ToString();
- 
-                double payable = subtotalafteroveralldiscount + Convert.ToDouble(lblTotalTax1.Text);
+
+                double payable = subtotalafteroveralldiscount + SafeParseLabel(lblTotalTax1.Text);
                 payable = Math.Round(payable, 2);
                 lblTotalPayable.Text = payable.ToString("N2");
             }
@@ -2888,12 +2904,12 @@ namespace cypos
             {
                 if (dgvItemList.Rows.Count > 0)
                 {
-                    double dblDiscountRate = Convert.ToDouble(txtDiscountRate.Text);
+                    double dblDiscountRate = SafeParseLabel(txtDiscountRate.Text);
                     txtDiscountRate.Text = dblDiscountRate.ToString();
-                    double dblBeforeSubTotal = Convert.ToDouble(lblTotal.Text) - Convert.ToDouble(lblTotalDiscount.Text);
+                    double dblBeforeSubTotal = SafeParseLabel(lblTotal.Text) - SafeParseLabel(lblTotalDiscount.Text);
                     double dblTotalDiscount = (dblBeforeSubTotal * dblDiscountRate) / 100;
 
-                    double dblDisPlusOverallDiscount = dblTotalDiscount + Convert.ToDouble(lblTotalDiscount.Text);
+                    double dblDisPlusOverallDiscount = dblTotalDiscount + SafeParseLabel(lblTotalDiscount.Text);
                     dblDisPlusOverallDiscount = Math.Round(dblDisPlusOverallDiscount, 2);
                     lblOverallDiscount.Text = dblDisPlusOverallDiscount.ToString();
 
@@ -2909,7 +2925,7 @@ namespace cypos
                         dblServiceCharge = (dblAfterSubTotal / 100) * dblScRate;
                     }
                     lblScAmount.Text = dblServiceCharge.ToString("N2");
-                    double dblPayable = dblAfterSubTotal + Convert.ToDouble(lblTotalTax1.Text) + Convert.ToDouble(lblTotalTax2.Text) + dblServiceCharge;
+                    double dblPayable = dblAfterSubTotal + SafeParseLabel(lblTotalTax1.Text) + SafeParseLabel(lblTotalTax2.Text) + dblServiceCharge;
                     dblPayable = Math.Round(dblPayable, 2);
                     lblTotalPayable.Text = dblPayable.ToString("N2");
                 }
