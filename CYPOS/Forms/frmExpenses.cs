@@ -104,7 +104,7 @@ namespace cypos
             {
                 dblSum += Convert.ToDouble(dgvExpenses.Rows[i].Cells["clmAmount"].Value);
             }
-            lblTotal.Text = "Total Amount: " + dblSum.ToString("N2"); 
+            lblTotal.Text = "Total Amount: " + Currency.Format(dblSum); 
         }
 
         private void frmExpenses_Load(object sender, EventArgs e)

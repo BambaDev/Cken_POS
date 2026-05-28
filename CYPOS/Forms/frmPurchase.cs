@@ -431,7 +431,7 @@ namespace cypos
             if (txtQty.Text != string.Empty && txtPrice.Text != string.Empty)
             {
                 decimal decAmount = Convert.ToDecimal(txtQty.Text) * Convert.ToDecimal(txtPrice.Text);
-                lblAmount.Text = decAmount.ToString("N2");
+                lblAmount.Text = Currency.Format(decAmount);
             }
         }
 

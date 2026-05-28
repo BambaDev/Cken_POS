@@ -90,16 +90,16 @@ namespace cypos
                     {
                         decimal changeAmt = paidAmount - payableAmount;
                         changeAmt = Math.Round(changeAmt, 2);
-                        lblChangeAmount.Text = changeAmt.ToString("N2");
-                        lblDueAmount.Text = "0";
+                        lblChangeAmount.Text = Currency.Format(changeAmt);
+                        lblDueAmount.Text = "0 FCFA";
                         this.AcceptButton = btnPrint;
                     }
                     else if (paidAmount <= payableAmount)
                     {
                         decimal dueAmt = payableAmount - paidAmount;
                         dueAmt = Math.Round(dueAmt, 2);
-                        lblDueAmount.Text = dueAmt.ToString("N2");
-                        lblChangeAmount.Text = "0";
+                        lblDueAmount.Text = Currency.Format(dueAmt);
+                        lblChangeAmount.Text = "0 FCFA";
                         this.AcceptButton = btnPrint;
                     }
 

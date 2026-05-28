@@ -647,7 +647,7 @@ namespace cypos
                 {
                     totalsum += Convert.ToDouble(dgvReturnedItems.Rows[i].Cells["clmAmount"].Value);
                 }
-                lblTotal.Text = Math.Round(totalsum, 2).ToString("N2");
+                lblTotal.Text = Currency.Format(totalsum);
 
                 //Discount amount sum
                 double total = Convert.ToDouble(totalsum.ToString());
@@ -660,7 +660,7 @@ namespace cypos
                 DisCount = Math.Round(DisCount, 2);
                 double sum = total - DisCount;
                 sum = Math.Round(sum, 2);
-                lblSubTotal.Text = sum.ToString("N2");
+                lblSubTotal.Text = Currency.Format(sum);
                 //Service Charge
                 double dblScRate = Settings.ServiceChargeRate;
                 double dblServiceCharge = 0;
@@ -671,8 +671,8 @@ namespace cypos
 
                 double payable = sum + Convert.ToDouble(lblTotalTax1.Text) + Convert.ToDouble(lblTotalTax2.Text) + dblServiceCharge;
                 payable = Math.Round(payable, 2);
-                lblTotalReturn.Text = payable.ToString("N2");
-                lblTotalDiscount.Text = DisCount.ToString("N2");
+                lblTotalReturn.Text = Currency.Format(payable);
+                lblTotalDiscount.Text = Currency.Format(DisCount);
             }
 
             public void TaxCalculation()
@@ -687,7 +687,7 @@ namespace cypos
                 }
 
                 Tax1 = Math.Round(Tax1, 2);
-                lblTotalTax1.Text = Tax1.ToString("N2");
+                lblTotalTax1.Text = Currency.Format(Tax1);
 
                 //Tax 2 amount
                 double Tax2 = 0.00;
@@ -697,7 +697,7 @@ namespace cypos
                 }
 
                 Tax2 = Math.Round(Tax2, 2);
-                lblTotalTax2.Text = Tax2.ToString("N2");
+                lblTotalTax2.Text = Currency.Format(Tax2);
 
                 double dblScRate = Settings.ServiceChargeRate;
                 double dblServiceCharge = 0;

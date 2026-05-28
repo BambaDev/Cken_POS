@@ -258,7 +258,7 @@ namespace cypos
                 lblUser.Text = dr["user_name"].ToString();
 
                 decimal decTotal = decimal.Parse(dr["payment_amount"].ToString());
-                lblTotal.Text = decTotal.ToString("N2");
+                lblTotal.Text = Currency.Format(decTotal);
                 btnRecall.Enabled = true;
                 btnPrintKot.Enabled = true;
             }
