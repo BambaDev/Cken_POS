@@ -874,7 +874,7 @@ namespace cypos
             double totalsum = 0.00;
             for (int i = 0; i < dgvItemList.Rows.Count; ++i)
             {
-                totalsum += Currency.Parse(dgvItemList.Rows[i].Cells["clmAmount"].Value.ToString());
+                totalsum += (double)Currency.Parse(dgvItemList.Rows[i].Cells["clmAmount"].Value.ToString());
             }
             lblTotal.Text = Currency.Format(totalsum);
             tssTotalItems.Text ="Total Item(s) : " + dgvItemList.RowCount.ToString();
@@ -1196,8 +1196,8 @@ namespace cypos
                         string strItemCode = dgvItemList.Rows[i].Cells["clmItemCode"].Value.ToString();
                         string strItemName = dgvItemList.Rows[i].Cells["clmItemName"].Value.ToString();
                         double dblQty = Convert.ToDouble(dgvItemList.Rows[i].Cells["clmQty"].Value.ToString());
-                        double dblPrice = Currency.Parse(dgvItemList.Rows[i].Cells["clmPrice"].Value.ToString());
-                        double dblTotal = Currency.Parse(dgvItemList.Rows[i].Cells["clmAmount"].Value.ToString());
+                        double dblPrice = (double)Currency.Parse(dgvItemList.Rows[i].Cells["clmPrice"].Value.ToString());
+                        double dblTotal = (double)Currency.Parse(dgvItemList.Rows[i].Cells["clmAmount"].Value.ToString());
                         double dblDiscount = Convert.ToDouble(dgvItemList.Rows[i].Cells["clmDiscountRate"].Value.ToString());
                         double dblDiscountAmount = Convert.ToDouble(dgvItemList.Rows[i].Cells["clmDiscountAmount"].Value.ToString());
                         bool isTaxApply = Convert.ToBoolean(dgvItemList.Rows[i].Cells["clmTaxApply"].Value.ToString());
@@ -1726,7 +1726,7 @@ namespace cypos
                     row.Cells["clmQty"].Value = dblQtySum;
 
                     double dblQty = Convert.ToDouble(row.Cells["clmQty"].Value);
-                    double dblPrice = Currency.Parse(row.Cells["clmPrice"].Value.ToString());
+                    double dblPrice = (double)Currency.Parse(row.Cells["clmPrice"].Value.ToString());
                     double dblDiscountRate = Convert.ToDouble(row.Cells["clmDiscountRate"].Value);
                     double dblTax1Rate = Convert.ToDouble(TaxValue.Tax1Rate);
                     double dblTax2Rate = Convert.ToDouble(TaxValue.Tax2Rate);
@@ -1762,7 +1762,7 @@ namespace cypos
                     row.Cells["clmQty"].Value = dblQtySum.ToString();
 
                     double dblQty = Convert.ToDouble(row.Cells["clmQty"].Value);
-                    double dblPrice = Currency.Parse(row.Cells["clmPrice"].Value.ToString());
+                    double dblPrice = (double)Currency.Parse(row.Cells["clmPrice"].Value.ToString());
                     double dblDiscountRate = Convert.ToDouble(row.Cells["clmDiscountRate"].Value);
                     double dblTax1Rate = Convert.ToDouble(TaxValue.Tax1Rate);
                     double dblTax2Rate = Convert.ToDouble(TaxValue.Tax2Rate);
@@ -1811,7 +1811,7 @@ namespace cypos
                     row.Cells["clmQty"].Value = dblQtySum;
 
                     double dblQty = Convert.ToDouble(row.Cells["clmQty"].Value);
-                    double dblPrice = Currency.Parse(row.Cells["clmPrice"].Value.ToString());
+                    double dblPrice = (double)Currency.Parse(row.Cells["clmPrice"].Value.ToString());
                     double dblDiscountRate = Convert.ToDouble(row.Cells["clmDiscountRate"].Value);
                     double dblTax1Rate = Convert.ToDouble(TaxValue.Tax1Rate);
                     double dblTax2Rate = Convert.ToDouble(TaxValue.Tax2Rate);
@@ -2377,8 +2377,8 @@ namespace cypos
                         string strItemCode = dgvItemList.Rows[i].Cells["clmItemCode"].Value.ToString();
                         string strItemName = dgvItemList.Rows[i].Cells["clmItemName"].Value.ToString();
                         double dblQty = Convert.ToDouble(dgvItemList.Rows[i].Cells["clmQty"].Value.ToString());
-                        double dblPrice = Currency.Parse(dgvItemList.Rows[i].Cells["clmPrice"].Value.ToString());
-                        double dblTotal = Currency.Parse(dgvItemList.Rows[i].Cells["clmAmount"].Value.ToString());
+                        double dblPrice = (double)Currency.Parse(dgvItemList.Rows[i].Cells["clmPrice"].Value.ToString());
+                        double dblTotal = (double)Currency.Parse(dgvItemList.Rows[i].Cells["clmAmount"].Value.ToString());
                         double dblDiscount = Convert.ToDouble(dgvItemList.Rows[i].Cells["clmDiscountRate"].Value.ToString());
                         bool isTaxApply = Convert.ToBoolean(dgvItemList.Rows[i].Cells["clmTaxApply"].Value.ToString());
                         bool isKitchenDisplay = Convert.ToBoolean(dgvItemList.Rows[i].Cells["clmKitchenDisplay"].Value.ToString());
