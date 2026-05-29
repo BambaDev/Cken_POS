@@ -79,25 +79,22 @@ namespace cypos
             {
                 try
                 {
-                    // Sécuriser les conversions avec TryParse
-                    decimal paidAmount = 0;
-                    decimal.TryParse(txtPaidAmount.Text, out paidAmount);
-
-                    decimal payableAmount = 0;
-                    decimal.TryParse(lblPayable.Text, out payableAmount);
+                    // Parser avec Currency.Parse() pour gérer format FCFA et espaces
+                    decimal paidAmount = Currency.Parse(txtPaidAmount.Text);
+                    decimal payableAmount = Currency.Parse(lblPayable.Text);
 
                     if (paidAmount >= payableAmount)
                     {
                         decimal changeAmt = paidAmount - payableAmount;
-                        changeAmt = Math.Round(changeAmt, 2);
+                        changeAmt = Math.Round(changeAmt, 0, MidpointRounding.AwayFromZero);
                         lblChangeAmount.Text = Currency.Format(changeAmt);
                         lblDueAmount.Text = "0 FCFA";
                         this.AcceptButton = btnPrint;
                     }
-                    else if (paidAmount <= payableAmount)
+                    else if (paidAmount < payableAmount)
                     {
                         decimal dueAmt = payableAmount - paidAmount;
-                        dueAmt = Math.Round(dueAmt, 2);
+                        dueAmt = Math.Round(dueAmt, 0, MidpointRounding.AwayFromZero);
                         lblDueAmount.Text = Currency.Format(dueAmt);
                         lblChangeAmount.Text = "0 FCFA";
                         this.AcceptButton = btnPrint;
@@ -106,7 +103,8 @@ namespace cypos
                 }
                 catch (Exception exp)
                 {
-                    lblChangeAmount.Text = "0";
+                    lblChangeAmount.Text = "0 FCFA";
+                    lblDueAmount.Text = "0 FCFA";
                     //Messages.ExceptionMessage(exp.Message);
                 }
             }
