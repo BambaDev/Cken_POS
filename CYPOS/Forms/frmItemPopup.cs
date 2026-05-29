@@ -124,7 +124,7 @@ namespace cypos
 
                     b.Text += " " + dataReader["item_code"] + "\n ";
                     b.Text += dataReader["item_name"].ToString();
-                    b.Text += "\n Price: " + dataReader["selling_price"];
+                    b.Text += "\n Price: " + Currency.Format(Convert.ToDecimal(dataReader["selling_price"]));
 
                     b.Font = new Font("Tahoma", 9, FontStyle.Regular, GraphicsUnit.Point);
                     b.TextAlign = ContentAlignment.TopLeft;

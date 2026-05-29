@@ -288,7 +288,7 @@ namespace cypos
                     btnItem.TextImageRelation = TextImageRelation.ImageAboveText;
 
                     btnItem.Text += dataReader["item_name"].ToString();
-                    btnItem.Text += "\n Price: " + dataReader["selling_price"];
+                    btnItem.Text += "\n Price: " + Currency.Format(Convert.ToDecimal(dataReader["selling_price"]));
   
                     floItemList.Controls.Add(btnItem);
                     currentImage++;
