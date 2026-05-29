@@ -813,7 +813,7 @@ Total</Value>
                         <Paragraph>
                           <TextRuns>
                             <TextRun>
-                              <Value>=Fields!payment_amount.Value</Value>
+                              <Value>=Format(CDec(Math.Round(Fields!payment_amount.Value, 0)),"N0") &amp; " FCFA"</Value>
                               <Style>
                                 <FontFamily>Tahoma</FontFamily>
                                 <FontSize>7pt</FontSize>
@@ -844,7 +844,7 @@ Total</Value>
                         <Paragraph>
                           <TextRuns>
                             <TextRun>
-                              <Value>=Fields!paid_amount.Value</Value>
+                              <Value>=Format(CDec(Math.Round(Fields!paid_amount.Value, 0)),"N0") &amp; " FCFA"</Value>
                               <Style>
                                 <FontFamily>Tahoma</FontFamily>
                                 <FontSize>7pt</FontSize>
@@ -875,7 +875,7 @@ Total</Value>
                         <Paragraph>
                           <TextRuns>
                             <TextRun>
-                              <Value>=Fields!due_amount.Value</Value>
+                              <Value>=Format(CDec(Math.Round(Fields!due_amount.Value, 0)),"N0") &amp; " FCFA"</Value>
                               <Style>
                                 <FontFamily>Tahoma</FontFamily>
                                 <FontSize>7pt</FontSize>
@@ -981,7 +981,7 @@ Total</Value>
                         <Paragraph>
                           <TextRuns>
                             <TextRun>
-                              <Value>=Sum(Fields!payment_amount.Value)</Value>
+                              <Value>=Format(CDec(Math.Round(Sum(Fields!payment_amount.Value), 0)),"N0") &amp; " FCFA"</Value>
                               <Style>
                                 <FontFamily>Tahoma</FontFamily>
                                 <FontSize>7pt</FontSize>
@@ -1021,7 +1021,7 @@ Total</Value>
                         <Paragraph>
                           <TextRuns>
                             <TextRun>
-                              <Value>=Sum(Fields!paid_amount.Value)</Value>
+                              <Value>=Format(CDec(Math.Round(Sum(Fields!paid_amount.Value), 0)),"N0") &amp; " FCFA"</Value>
                               <Style>
                                 <FontFamily>Tahoma</FontFamily>
                                 <FontSize>7pt</FontSize>
@@ -1061,7 +1061,7 @@ Total</Value>
                         <Paragraph>
                           <TextRuns>
                             <TextRun>
-                              <Value>=Sum(Fields!due_amount.Value)</Value>
+                              <Value>=Format(CDec(Math.Round(Sum(Fields!due_amount.Value), 0)),"N0") &amp; " FCFA"</Value>
                               <Style>
                                 <FontFamily>Tahoma</FontFamily>
                                 <FontSize>7pt</FontSize>
