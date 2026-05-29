@@ -492,7 +492,13 @@ namespace cypos
             {
                 decimal rounded = Currency.Parse(txtPrice.Text);
                 txtPrice.Text = Currency.FormatInput(rounded);
-                CalculateAmount(); // Recalculer le montant total
+
+                // Recalculer le montant total (même logique que txtPrice_TextChanged)
+                if (txtQty.Text != string.Empty && txtPrice.Text != string.Empty)
+                {
+                    decimal decAmount = Convert.ToDecimal(txtQty.Text) * Convert.ToDecimal(txtPrice.Text);
+                    lblAmount.Text = Currency.Format(decAmount);
+                }
             }
         }
 
