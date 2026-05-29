@@ -1054,7 +1054,7 @@ namespace cypos
 
         private void btnDecreaseDiscount_Click(object sender, EventArgs e)
         {
-            if (Convert.ToDecimal(lblTotalPayable.Text)==0 || lblTotalPayable.Text == "")
+            if (Currency.Parse(lblTotalPayable.Text)==0 || lblTotalPayable.Text == "")
             {
                  Messages.InformationMessage("Please select item(s)");
             }
@@ -1384,7 +1384,7 @@ namespace cypos
         {
             if (Settings.PreviewBeforePrint)
             {
-                if (Convert.ToDecimal(lblTotalPayable.Text) == 0 || lblTotalPayable.Text == string.Empty)
+                if (Currency.Parse(lblTotalPayable.Text) == 0 || lblTotalPayable.Text == string.Empty)
                 {
                     Messages.InformationMessage("Please enter item(s)");
                 }
@@ -1405,7 +1405,7 @@ namespace cypos
             else
             {
                 LocalReport report = new LocalReport();
-                SaveInvoice(Convert.ToDecimal(lblTotalPayable.Text), Convert.ToDecimal(lblTotalPayable.Text), 0, 0, DateTime.Now.ToString("dd/MM/yyyy").ToString(), DateTime.Now.ToString("hh:mm tt"), "Cash", "Quick Sale",false);
+                SaveInvoice(Currency.Parse(lblTotalPayable.Text), Currency.Parse(lblTotalPayable.Text), 0, 0, DateTime.Now.ToString("dd/MM/yyyy").ToString(), DateTime.Now.ToString("hh:mm tt"), "Cash", "Quick Sale",false);
                 report.ReportEmbeddedResource = "cypos.Reports.rptReceipt.rdlc";
 
                 report.EnableExternalImages = true;

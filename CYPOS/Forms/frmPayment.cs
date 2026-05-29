@@ -247,7 +247,14 @@ namespace cypos
                 {
                     lblChangeAmount.Text = lblChangeAmount.Text == "" ? "0" : lblChangeAmount.Text;
                     lblDueAmount.Text = lblDueAmount.Text == "" ? "0" : lblDueAmount.Text;
-                    _frmMain.SaveInvoice(Convert.ToDecimal(lblPayable.Text), Convert.ToDecimal(txtPaidAmount.Text), Convert.ToDecimal(lblChangeAmount.Text), Convert.ToDecimal(lblDueAmount.Text), dtpDate.Text, dtpDate.Value.ToString("hh:mm tt"), lblPaymentType.Text, txtNote.Text);
+
+                    // Utiliser Currency.Parse() pour gérer le format "X XXX FCFA"
+                    decimal payable = Currency.Parse(lblPayable.Text);
+                    decimal paid = Currency.Parse(txtPaidAmount.Text);
+                    decimal change = Currency.Parse(lblChangeAmount.Text);
+                    decimal due = Currency.Parse(lblDueAmount.Text);
+
+                    _frmMain.SaveInvoice(payable, paid, change, due, dtpDate.Text, dtpDate.Value.ToString("hh:mm tt"), lblPaymentType.Text, txtNote.Text);
                     this.Close();
                 }
                 catch (Exception exp)
@@ -428,9 +435,15 @@ namespace cypos
 
         private void btnPrint_Click(object sender, EventArgs e)
         {
+            // Utiliser Currency.Parse() pour gérer le format "X XXX FCFA"
+            decimal payable = Currency.Parse(lblPayable.Text);
+            decimal paid = Currency.Parse(txtPaidAmount.Text);
+            decimal change = Currency.Parse(lblChangeAmount.Text);
+            decimal due = Currency.Parse(lblDueAmount.Text);
+
             if (Settings.PreviewBeforePrint)
             {
-                _frmMain.SaveInvoice(Convert.ToDecimal(lblPayable.Text), Convert.ToDecimal(txtPaidAmount.Text), Convert.ToDecimal(lblChangeAmount.Text), Convert.ToDecimal(lblDueAmount.Text), dtpDate.Text, dtpDate.Value.ToString("hh:mm tt"), lblPaymentType.Text, txtNote.Text);
+                _frmMain.SaveInvoice(payable, paid, change, due, dtpDate.Text, dtpDate.Value.ToString("hh:mm tt"), lblPaymentType.Text, txtNote.Text);
                 //Open Print Invoice
                 frmPrintView frmPrintView = new frmPrintView(_frmMain);
                 frmPrintView.RefNo = strInvoiceNo;
@@ -440,7 +453,7 @@ namespace cypos
             else
             {
                 LocalReport report = new LocalReport();
-                _frmMain.SaveInvoice(Convert.ToDecimal(lblPayable.Text), Convert.ToDecimal(txtPaidAmount.Text), Convert.ToDecimal(lblChangeAmount.Text), Convert.ToDecimal(lblDueAmount.Text), dtpDate.Text, dtpDate.Value.ToString("hh:mm tt"), lblPaymentType.Text, txtNote.Text, false);
+                _frmMain.SaveInvoice(payable, paid, change, due, dtpDate.Text, dtpDate.Value.ToString("hh:mm tt"), lblPaymentType.Text, txtNote.Text, false);
                 report.ReportEmbeddedResource = "cypos.Reports.rptReceipt.rdlc";
 
                 report.EnableExternalImages = true;
@@ -499,7 +512,9 @@ namespace cypos
 
         private void btnExact_Click(object sender, EventArgs e)
         {
-            txtPaidAmount.Text = lblPayable.Text;
+            // Extraire le montant numérique sans "FCFA"
+            decimal payable = Currency.Parse(lblPayable.Text);
+            txtPaidAmount.Text = payable.ToString("0.00");
         }
 
         private void btnKbNote_Click(object sender, EventArgs e)

@@ -192,10 +192,15 @@ namespace cypos
             {
                 try
                 {
-                    if (Convert.ToDecimal(txtPaidAmount.Text) <= Convert.ToDecimal(lblDueAmount.Text))
+                    // Utiliser Currency.Parse() pour gérer le format "X XXX FCFA"
+                    decimal paidAmount = Currency.Parse(txtPaidAmount.Text);
+                    decimal dueAmount = Currency.Parse(lblDueAmount.Text);
+                    decimal totalAmount = Currency.Parse(lblTotalAmount.Text);
+
+                    if (paidAmount <= dueAmount)
                     {
-                        decimal decPaidAmount = Convert.ToDecimal(lblDueAmount.Text) - Convert.ToDecimal(txtPaidAmount.Text);
-                        decimal decBalanceAmount = Convert.ToDecimal(lblDueAmount.Text) - Convert.ToDecimal(txtPaidAmount.Text);
+                        decimal decPaidAmount = dueAmount - paidAmount;
+                        decimal decBalanceAmount = dueAmount - paidAmount;
 
                         // ===============================================================================
                         // OPÉRATION CRITIQUE AVEC TRANSACTION SQL
@@ -224,9 +229,9 @@ namespace cypos
                             {
                                 cmdInsert.Parameters.AddWithValue("@paymentDate", dtpPaymentDate.Text);
                                 cmdInsert.Parameters.AddWithValue("@invoiceId", lblInvoiceNo.Text);
-                                cmdInsert.Parameters.AddWithValue("@totalAmount", Convert.ToDecimal(lblTotalAmount.Text));
+                                cmdInsert.Parameters.AddWithValue("@totalAmount", totalAmount);
                                 cmdInsert.Parameters.AddWithValue("@dueAmount", decBalanceAmount);
-                                cmdInsert.Parameters.AddWithValue("@paidAmount", Convert.ToDecimal(txtPaidAmount.Text));
+                                cmdInsert.Parameters.AddWithValue("@paidAmount", paidAmount);
                                 cmdInsert.Parameters.AddWithValue("@paymentType", cmbPaymentType.Text);
                                 cmdInsert.Parameters.AddWithValue("@customerId", lblCustomer.Text);
                                 cmdInsert.ExecuteNonQuery();
