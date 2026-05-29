@@ -234,6 +234,41 @@ namespace cypos
             //{
                 _frmMain.Clear();
             //}
+
+            // Nettoyage correct du ReportViewer pour éviter CannotUnloadAppDomainException
+            try
+            {
+                if (rptViewer != null)
+                {
+                    rptViewer.LocalReport.ReleaseSandboxAppDomain();
+                    rptViewer.Reset();
+                }
+            }
+            catch
+            {
+                // Ignorer les erreurs de nettoyage
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                // Nettoyer ReportViewer avant disposal
+                try
+                {
+                    if (rptViewer != null)
+                    {
+                        rptViewer.LocalReport.ReleaseSandboxAppDomain();
+                        rptViewer.Reset();
+                    }
+                }
+                catch
+                {
+                    // Ignorer les erreurs de nettoyage
+                }
+            }
+            base.Dispose(disposing);
         }
     }
 }
