@@ -81,9 +81,8 @@ namespace cypos
         // Helper method pour conversion sécurisée des labels formatés (N2)
         private double SafeParseLabel(string labelText)
         {
-            double result = 0;
-            double.TryParse(labelText, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, out result);
-            return result;
+            // Utiliser Currency.Parse() pour gérer le format "X XXX FCFA"
+            return (double)Currency.Parse(labelText);
         }
 
         public frmMain()
@@ -899,11 +898,9 @@ namespace cypos
                 dblServiceCharge = (sum / 100) * dblScRate;
             }
 
-            // Conversion sécurisée des taxes depuis les labels formatés
-            double tax1Value = 0;
-            double tax2Value = 0;
-            double.TryParse(lblTotalTax1.Text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, out tax1Value);
-            double.TryParse(lblTotalTax2.Text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, out tax2Value);
+            // Conversion sécurisée des taxes depuis les labels formatés FCFA
+            double tax1Value = (double)Currency.Parse(lblTotalTax1.Text);
+            double tax2Value = (double)Currency.Parse(lblTotalTax2.Text);
 
             double payable = sum + tax1Value + tax2Value + dblServiceCharge;
             payable = Math.Round(payable,2);
@@ -914,8 +911,7 @@ namespace cypos
 
         public void TaxCalculation()
         {
-            double Subtotal = 0;
-            double.TryParse(lblSubtotal.Text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, out Subtotal);            
+            double Subtotal = (double)Currency.Parse(lblSubtotal.Text);            
 
             //Tax 1 amount
             double Tax1 = 0.00;
