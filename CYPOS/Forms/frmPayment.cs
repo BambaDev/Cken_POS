@@ -169,18 +169,15 @@ namespace cypos
             }
             else
             {
-                // Sécuriser les conversions avec TryParse
-                decimal currentAmount = 0;
-                if (!string.IsNullOrEmpty(txtPaidAmount.Text))
-                {
-                    decimal.TryParse(txtPaidAmount.Text, out currentAmount);
-                }
+                // Parser le montant actuel (peut contenir virgules ou format FCFA)
+                decimal currentAmount = Currency.Parse(txtPaidAmount.Text);
 
                 decimal currencyAmount = 0;
                 decimal.TryParse(currencyvalue, out currencyAmount);
 
                 decimal newAmount = currentAmount + currencyAmount;
-                txtPaidAmount.Text = newAmount.ToString("0.00");
+                // Format Franc CFA sans décimales (arrondi automatique)
+                txtPaidAmount.Text = Math.Round(newAmount, 0, MidpointRounding.AwayFromZero).ToString("N0", System.Globalization.CultureInfo.InvariantCulture).Replace(",", " ");
                 txtPaidAmount.Focus();
             }
 
@@ -188,13 +185,10 @@ namespace cypos
 
         private void NumericKeypad(string Numvalue)
         {
+            // Franc CFA n'a pas de décimales - ignorer le point
             if (Numvalue == ".")
             {
-                if (!txtPaidAmount.Text.Contains('.'))
-                {
-                    txtPaidAmount.Text += Numvalue;
-                    txtPaidAmount.Focus();
-                }
+                return; // Pas de décimales en FCFA
             }
             else
             {
@@ -215,19 +209,14 @@ namespace cypos
             {
                 bool ignoreKeyPress = false;
 
-                bool matchString = Regex.IsMatch(txtPaidAmount.Text.ToString(), @"\.\d\d\d");
-
                 if (e.KeyChar == '\b') // Always allow a Backspace
                     ignoreKeyPress = false;
-                else if (matchString)
+                else if (e.KeyChar == '.') // Franc CFA n'a pas de décimales
                     ignoreKeyPress = true;
-                else if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar) && e.KeyChar != '.')
-                    ignoreKeyPress = true;
-                else if (e.KeyChar == '.' && (sender as TextBox).Text.IndexOf('.') > -1)
+                else if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
                     ignoreKeyPress = true;
 
                 e.Handled = ignoreKeyPress;
-                //using System.Text.RegularExpressions;
             }
             catch
             {
