@@ -1387,7 +1387,8 @@ namespace cypos
                 else
                 {
                     //Save Invoice
-                    SaveInvoice(Convert.ToDecimal(lblTotalPayable.Text.ToString()), Convert.ToDecimal(lblTotalPayable.Text.ToString()), 0, 0, DateTime.Now.ToString("dd/MM/yyyy").ToString(), DateTime.Now.ToString("hh:mm tt"), "Cash", "Quick Sale", false);
+                    decimal totalPayable = Currency.Parse(lblTotalPayable.Text);
+                    SaveInvoice(totalPayable, totalPayable, 0, 0, DateTime.Now.ToString("dd/MM/yyyy").ToString(), DateTime.Now.ToString("hh:mm tt"), "Cash", "Quick Sale", false);
 
                     timer1.Enabled = false;
                     //Open Print Invoice
@@ -2140,9 +2141,8 @@ namespace cypos
 
         private void btnHold_Click(object sender, EventArgs e)
         {
-            // Sécuriser la conversion avec TryParse pour éviter FormatException
-            decimal totalPayable = 0;
-            decimal.TryParse(lblTotalPayable.Text, out totalPayable);
+            // Parser avec Currency.Parse() pour gérer format FCFA
+            decimal totalPayable = Currency.Parse(lblTotalPayable.Text);
 
             if (totalPayable == 0 || lblTotalPayable.Text == string.Empty)
             {
