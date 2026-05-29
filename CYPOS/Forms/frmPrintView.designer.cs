@@ -13,9 +13,26 @@
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
-                components.Dispose();
+                // Nettoyer ReportViewer avant disposal pour éviter CannotUnloadAppDomainException
+                try
+                {
+                    if (rptViewer != null)
+                    {
+                        rptViewer.LocalReport.ReleaseSandboxAppDomain();
+                        rptViewer.Reset();
+                    }
+                }
+                catch
+                {
+                    // Ignorer les erreurs de nettoyage
+                }
+
+                if (components != null)
+                {
+                    components.Dispose();
+                }
             }
             base.Dispose(disposing);
         }
