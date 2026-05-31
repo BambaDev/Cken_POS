@@ -16,6 +16,7 @@ using Microsoft.Reporting.WinForms;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using Microsoft.PointOfService;
+using System.Globalization;
 
 namespace cypos 
 {
@@ -565,9 +566,13 @@ namespace cypos
             }
 
             // SÉCURISÉ : Utilise SqlParameter pour item_code et tax1Rate
-            // Convertir tax1Rate en decimal pour SQL
+            // Convertir tax1Rate en decimal pour SQL - gère format français "18,00"
             decimal tax1Rate = 0;
-            decimal.TryParse(lblTax1Rate.Text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out tax1Rate);
+            string tax1Text = lblTax1Rate.Text.Replace(",", ".");
+            if (!decimal.TryParse(tax1Text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out tax1Rate))
+            {
+                decimal.TryParse(lblTax1Rate.Text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, out tax1Rate);
+            }
 
             string strSQL = "SELECT item_code, item_name, selling_price, 1.00 AS qty, (selling_price * 1.00) * 1.00 as 'amount', " +
                     " (((selling_price * 1.00) * discount) / 100.00) as 'discount_amount', " +
@@ -659,21 +664,36 @@ namespace cypos
                         dgvItemList.Rows[n].Cells["clmDiscountAmount"].Value = DisamtInc;
                     }
 
-                    if (isTaxApply != false) // If apply  tax 
+                    if (isTaxApply != false) // If apply  tax
                     {
-                        double dblTaxOneAmount = ((((dblSellingPrice * dblQuantity) - (((dblSellingPrice * dblQuantity) * dblDiscRate) / 100.00)) * double.Parse(lblTax1Rate.Text)) / 100.00);
+                        // Parse tax rate - try InvariantCulture first, then CurrentCulture for French format
+                        double dblTax1Rate = 0;
+                        string tax1Inc = lblTax1Rate.Text.Replace(",", ".");
+                        if (!double.TryParse(tax1Inc, NumberStyles.Any, CultureInfo.InvariantCulture, out dblTax1Rate))
+                        {
+                            double.TryParse(lblTax1Rate.Text, NumberStyles.Any, CultureInfo.CurrentCulture, out dblTax1Rate);
+                        }
+
+                        double dblTaxOneAmount = ((((dblSellingPrice * dblQuantity) - (((dblSellingPrice * dblQuantity) * dblDiscRate) / 100.00)) * dblTax1Rate) / 100.00);
                         dgvItemList.Rows[n].Cells["clmTax1Amount"].Value = dblTaxOneAmount;
 
                         if (TaxValue.TaxType == "2LevelofTax") // Two Tax Enabled
                         {
+                            double dblTax2Rate = 0;
+                            string tax2Inc = lblTax2Rate.Text.Replace(",", ".");
+                            if (!double.TryParse(tax2Inc, NumberStyles.Any, CultureInfo.InvariantCulture, out dblTax2Rate))
+                            {
+                                double.TryParse(lblTax2Rate.Text, NumberStyles.Any, CultureInfo.CurrentCulture, out dblTax2Rate);
+                            }
+
                             if (TaxValue.CalMethod == 1)
                             {
-                                double dblTaxTwoAmount1 = ((((dblSellingPrice * dblQuantity) - (((dblSellingPrice * dblQuantity) * dblDiscRate) / 100.00)) * double.Parse(lblTax2Rate.Text)) / 100.00);
+                                double dblTaxTwoAmount1 = ((((dblSellingPrice * dblQuantity) - (((dblSellingPrice * dblQuantity) * dblDiscRate) / 100.00)) * dblTax2Rate) / 100.00);
                                 dgvItemList.Rows[n].Cells["clmTax2Amount"].Value = dblTaxTwoAmount1;
                             }
                             else if (TaxValue.CalMethod == 2)
                             {
-                                double dblTaxTwoAmount2 = (((((dblSellingPrice * dblQty) - (((dblSellingPrice * dblQty) * dblDiscRate) / 100.00)) + dblTaxOneAmount) * double.Parse(lblTax2Rate.Text)) / 100.00);
+                                double dblTaxTwoAmount2 = (((((dblSellingPrice * dblQty) - (((dblSellingPrice * dblQty) * dblDiscRate) / 100.00)) + dblTaxOneAmount) * dblTax2Rate) / 100.00);
                                 dgvItemList.Rows[n].Cells["clmTax2Amount"].Value = dblTaxTwoAmount2;
                             }
                         }
@@ -750,9 +770,13 @@ namespace cypos
             btnSelectedCustomer.Text = "Customer" + Environment.NewLine + dtHeader.Rows[0]["customer"].ToString();
 
             // SÉCURISÉ : Utilise SqlParameter pour header_id et tax1Rate
-            // Convertir tax1Rate en decimal pour SQL
+            // Convertir tax1Rate en decimal pour SQL - gère format français "18,00"
             decimal tax1RateRecall = 0;
-            decimal.TryParse(lblTax1Rate.Text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out tax1RateRecall);
+            string tax1TextRecall = lblTax1Rate.Text.Replace(",", ".");
+            if (!decimal.TryParse(tax1TextRecall, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out tax1RateRecall))
+            {
+                decimal.TryParse(lblTax1Rate.Text, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, out tax1RateRecall);
+            }
 
             string strSQL = "SELECT item_code, item_name, selling_price, qty, (selling_price * qty) AS 'amount', " +
                             " (((selling_price * qty) * discount) / 100.00) as 'discount_amount', " +
@@ -1876,6 +1900,26 @@ namespace cypos
 
         private void btnExit_Click(object sender, EventArgs e)
         {
+            // Nettoyage du cash drawer avant fermeture
+            try
+            {
+                if (myCashDrawer != null)
+                {
+                    if (myCashDrawer.Claimed)
+                    {
+                        myCashDrawer.Release();
+                    }
+                    if (myCashDrawer.DeviceEnabled)
+                    {
+                        myCashDrawer.Close();
+                    }
+                }
+            }
+            catch
+            {
+                // Ignorer les erreurs de nettoyage
+            }
+
             SetWindowPos(TaskbarHWnd, IntPtr.Zero, 0, 0, 0, 0,
             SetWindowPosFlags.SWP_SHOWWINDOW);
             SetWindowPos(StartButtonHWnd, IntPtr.Zero, 0, 0, 0, 0,
@@ -2523,21 +2567,36 @@ namespace cypos
 
                 bool isTaxApply = Convert.ToBoolean(dgvItemList.Rows[row.Index].Cells["clmTaxApply"].Value);
                 
-                if (isTaxApply != false) // If apply  tax 
+                if (isTaxApply != false) // If apply  tax
                 {
-                    double dblTaxOneAmount = ((((dblPrice * dblQty) - (((dblPrice * dblQty) * dblDiscRate) / 100.00)) * double.Parse(lblTax1Rate.Text)) / 100.00);
+                    // Parse tax rate - try InvariantCulture first, then CurrentCulture for French format
+                    double dblTax1Rate = 0;
+                    string tax1Text = lblTax1Rate.Text.Replace(",", ".");
+                    if (!double.TryParse(tax1Text, NumberStyles.Any, CultureInfo.InvariantCulture, out dblTax1Rate))
+                    {
+                        double.TryParse(lblTax1Rate.Text, NumberStyles.Any, CultureInfo.CurrentCulture, out dblTax1Rate);
+                    }
+
+                    double dblTaxOneAmount = ((((dblPrice * dblQty) - (((dblPrice * dblQty) * dblDiscRate) / 100.00)) * dblTax1Rate) / 100.00);
                     dgvItemList.Rows[row.Index].Cells["clmTax1Amount"].Value = dblTaxOneAmount;
 
                     if (TaxValue.TaxType == "2LevelofTax") // Two Tax Enabled
                     {
+                        double dblTax2Rate = 0;
+                        string tax2Text = lblTax2Rate.Text.Replace(",", ".");
+                        if (!double.TryParse(tax2Text, NumberStyles.Any, CultureInfo.InvariantCulture, out dblTax2Rate))
+                        {
+                            double.TryParse(lblTax2Rate.Text, NumberStyles.Any, CultureInfo.CurrentCulture, out dblTax2Rate);
+                        }
+
                         if (TaxValue.CalMethod == 1)
                         {
-                            double dblTaxTwoAmount1 = ((((dblPrice * dblQty) - (((dblPrice * dblQty) * dblDiscRate) / 100.00)) * double.Parse(lblTax2Rate.Text)) / 100.00);
+                            double dblTaxTwoAmount1 = ((((dblPrice * dblQty) - (((dblPrice * dblQty) * dblDiscRate) / 100.00)) * dblTax2Rate) / 100.00);
                             dgvItemList.Rows[row.Index].Cells["clmTax2Amount"].Value = dblTaxTwoAmount1;
                         }
                         else if (TaxValue.CalMethod == 2)
                         {
-                            double dblTaxTwoAmount2 = (((((dblPrice * dblQty) - (((dblPrice * dblQty) * dblDiscRate) / 100.00)) + dblTaxOneAmount) * double.Parse(lblTax2Rate.Text)) / 100.00);
+                            double dblTaxTwoAmount2 = (((((dblPrice * dblQty) - (((dblPrice * dblQty) * dblDiscRate) / 100.00)) + dblTaxOneAmount) * dblTax2Rate) / 100.00);
                             dgvItemList.Rows[row.Index].Cells["clmTax2Amount"].Value = dblTaxTwoAmount2;
                         }
                     }
@@ -2814,7 +2873,50 @@ namespace cypos
 
         private void btnOpenDrawer_Click(object sender, EventArgs e)
         {
-            myCashDrawer.OpenDrawer();
+            try
+            {
+                // Vérifier si le tiroir-caisse est initialisé
+                if (myCashDrawer == null)
+                {
+                    // Tentative d'initialisation
+                    try
+                    {
+                        myExplorer = new PosExplorer(this);
+                        DeviceInfo device = myExplorer.GetDevice("CashDrawer");
+                        if (device != null)
+                        {
+                            myCashDrawer = (CashDrawer)myExplorer.CreateInstance(device);
+                            myCashDrawer.Open();
+                            myCashDrawer.Claim(5000);
+                            myCashDrawer.DeviceEnabled = true;
+                        }
+                    }
+                    catch
+                    {
+                        // Si l'initialisation échoue, afficher message
+                        Messages.InformationMessage("Cash drawer device not found or not configured.\nPlease check your POS hardware setup.");
+                        return;
+                    }
+                }
+
+                // Vérifier si le tiroir est disponible et ouvert
+                if (myCashDrawer != null && myCashDrawer.Claimed)
+                {
+                    myCashDrawer.OpenDrawer();
+                }
+                else
+                {
+                    Messages.InformationMessage("Cash drawer is not ready. Please check the device connection.");
+                }
+            }
+            catch (PosControlException pex)
+            {
+                Messages.ExceptionMessage("Cash drawer error: " + pex.Message);
+            }
+            catch (Exception ex)
+            {
+                Messages.ExceptionMessage("Unable to open cash drawer: " + ex.Message);
+            }
         }
 
 
