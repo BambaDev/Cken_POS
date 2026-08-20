@@ -269,10 +269,19 @@ namespace cypos
                 Messages.InformationMessage("Please enter user name");
                 txtUsername.Focus();
             }
-            else if (txtPassword.Text == "")
+            else if (txtPassword.Text == "" && lblUid.Text == "-")
             {
                 Messages.InformationMessage("Please enter password");
                 txtPassword.Focus();
+            }
+            else if (txtPassword.Text != "" && !ValidatePassword(txtPassword.Text))
+            {
+                txtPassword.Focus();
+            }
+            else if (!InputValidator.IsValidUsername(txtUsername.Text))
+            {
+                Messages.InformationMessage("Username must be 3-50 characters (letters, numbers, underscore)");
+                txtUsername.Focus();
             }
             else if (!rdbAdmin.Checked && !rdbCashier.Checked && !rdbWaiter.Checked)
             {
@@ -321,6 +330,7 @@ namespace cypos
                         };
 
                         SecureDataAccess.ExecuteNonQuery(strSQLInsert, parameters);
+                        AuditLog.LogUserAction("CREATE", "User", txtUsername.Text);
 
                         //Picture Upload
                         string strPath = Application.StartupPath + @"\Images\";
@@ -412,7 +422,7 @@ namespace cypos
                         }
 
                         SecureDataAccess.ExecuteNonQuery(strSQLUpdate, parameters);
-
+                        AuditLog.LogUserAction("UPDATE", "User", lblUid.Text);
 
                         //Update image
                         if (lblFileExtension.Text != "user.png")
@@ -543,6 +553,7 @@ namespace cypos
                         };
 
                         SecureDataAccess.ExecuteNonQuery(sql, parameters);
+                        AuditLog.LogUserAction("DELETE", "User", lblUid.Text);
 
                         pbxUserImage.InitialImage.Dispose();
                         string path = Application.StartupPath + @"\Images\";
@@ -642,6 +653,16 @@ namespace cypos
             frmKeyboard frmKeyboard = new frmKeyboard(txtPassword);
             frmKeyboard.ShowDialog();
         }
-           
+
+        private bool ValidatePassword(string password)
+        {
+            string errorMessage;
+            if (!InputValidator.IsValidPassword(password, out errorMessage))
+            {
+                Messages.InformationMessage(errorMessage);
+                return false;
+            }
+            return true;
+        }
     }
 }

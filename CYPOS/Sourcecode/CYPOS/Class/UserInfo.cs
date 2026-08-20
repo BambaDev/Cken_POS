@@ -12,7 +12,6 @@ namespace cypos
     {
         public static string Userid { get; set; }
         public static string UserName { get; set; }
-        public static string UserPassword { get; set; }
         public static string UserType { get; set; }
     }  
 }

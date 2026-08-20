@@ -173,6 +173,9 @@
     <Compile Include="Class\ErrorLog.cs" />
     <Compile Include="Class\MessageFilter.cs" />
     <Compile Include="Class\DirectPrint.cs" />
+    <Compile Include="Class\AuditLog.cs" />
+    <Compile Include="Class\InputValidator.cs" />
+    <Compile Include="Class\LoginThrottler.cs" />
     <Compile Include="Class\PasswordHelper.cs" />
     <Compile Include="Class\SecureDataAccess.cs" />
     <Compile Include="Controls\ColorDropDown.cs">

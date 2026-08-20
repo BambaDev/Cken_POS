@@ -95,7 +95,6 @@ namespace cypos
 
         private void btnLogin_Click(object sender, EventArgs e)
         {
-            // Validate username
             if (string.IsNullOrWhiteSpace(txtUserName.Text))
             {
                 Messages.WarningMessage("Please enter username");
@@ -103,7 +102,6 @@ namespace cypos
                 return;
             }
 
-            // Validate password
             if (string.IsNullOrWhiteSpace(txtPassword.Text))
             {
                 Messages.WarningMessage("Please enter password");
@@ -111,33 +109,44 @@ namespace cypos
                 return;
             }
 
+            string username = txtUserName.Text.Trim();
+
+            if (LoginThrottler.IsLockedOut(username))
+            {
+                int seconds = LoginThrottler.RemainingLockoutSeconds(username);
+                lblmsg.Visible = true;
+                lblmsg.Text = string.Format("Account locked. Try again in {0} min", (seconds / 60) + 1);
+                return;
+            }
+
             try
             {
-                // Use secure authentication method with password hashing
                 string userType;
                 bool authenticated = SecureDataAccess.AuthenticateUser(
-                    txtUserName.Text.Trim(),
+                    username,
                     txtPassword.Text,
                     out userType
                 );
 
                 if (authenticated)
                 {
-                    // Set user info based on user type
-                    UserInfo.UserName = txtUserName.Text.Trim();
+                    LoginThrottler.RecordSuccess(username);
+                    AuditLog.LogLogin(username, true);
+
+                    UserInfo.UserName = username;
                     UserInfo.UserType = userType;
 
-                    // Log the successful login
                     WriteLoginRecords();
 
-                    // Navigate to main form
                     frmMain frmMain = new frmMain();
                     frmMain.Show();
                     this.Hide();
                 }
                 else
                 {
-                    // Authentication failed
+                    LoginThrottler.RecordFailedAttempt(username);
+                    AuditLog.LogLogin(username, false);
+
                     lblmsg.Visible = true;
                     lblmsg.Text = "Username or Password does not match";
                     txtPassword.Clear();
