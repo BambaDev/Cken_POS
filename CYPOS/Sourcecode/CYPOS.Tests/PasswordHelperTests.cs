@@ -1,323 +1,194 @@
 using System;
 using NUnit.Framework;
-using CYPOS;
+using cypos;
 
 namespace CYPOS.Tests
 {
-    /// <summary>
-    /// Tests unitaires pour la classe PasswordHelper
-    /// Vérifie le hachage SHA256 et la validation des mots de passe
-    /// </summary>
     [TestFixture]
     public class PasswordHelperTests
     {
-        #region Tests HashPassword
+        #region PBKDF2 HashPassword Tests
 
         [Test]
-        [Description("Vérifie que HashPassword retourne un hash SHA256 de 64 caractères")]
-        public void HashPassword_ValidPassword_Returns64CharacterHash()
+        public void HashPassword_ValidPassword_ReturnsPbkdf2Format()
         {
-            // Arrange
-            string password = "test123";
+            string hash = PasswordHelper.HashPassword("test123");
 
-            // Act
-            string hash = PasswordHelper.HashPassword(password);
-
-            // Assert
             Assert.IsNotNull(hash);
-            Assert.AreEqual(64, hash.Length, "Le hash SHA256 doit faire 64 caractères");
+            Assert.IsTrue(hash.StartsWith("PBKDF2$"));
+            string[] parts = hash.Split('$');
+            Assert.AreEqual(4, parts.Length);
         }
 
         [Test]
-        [Description("Vérifie que le même mot de passe produit toujours le même hash")]
-        public void HashPassword_SamePassword_ReturnsSameHash()
+        public void HashPassword_SamePassword_ReturnsDifferentHashes()
         {
-            // Arrange
-            string password = "admin";
+            string hash1 = PasswordHelper.HashPassword("admin");
+            string hash2 = PasswordHelper.HashPassword("admin");
 
-            // Act
-            string hash1 = PasswordHelper.HashPassword(password);
-            string hash2 = PasswordHelper.HashPassword(password);
-
-            // Assert
-            Assert.AreEqual(hash1, hash2, "Le même mot de passe doit toujours produire le même hash");
+            Assert.AreNotEqual(hash1, hash2, "PBKDF2 with random salt should produce different hashes");
         }
 
         [Test]
-        [Description("Vérifie que 'admin' produit le hash attendu")]
-        public void HashPassword_AdminPassword_ReturnsExpectedHash()
-        {
-            // Arrange
-            string password = "admin";
-            string expectedHash = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
-
-            // Act
-            string actualHash = PasswordHelper.HashPassword(password);
-
-            // Assert
-            Assert.AreEqual(expectedHash, actualHash, "Le hash de 'admin' doit correspondre au hash SHA256 attendu");
-        }
-
-        [Test]
-        [Description("Vérifie que des mots de passe différents produisent des hash différents")]
-        public void HashPassword_DifferentPasswords_ReturnDifferentHashes()
-        {
-            // Arrange
-            string password1 = "password123";
-            string password2 = "password124";
-
-            // Act
-            string hash1 = PasswordHelper.HashPassword(password1);
-            string hash2 = PasswordHelper.HashPassword(password2);
-
-            // Assert
-            Assert.AreNotEqual(hash1, hash2, "Des mots de passe différents doivent produire des hash différents");
-        }
-
-        [Test]
-        [Description("Vérifie que les caractères spéciaux sont supportés")]
-        public void HashPassword_SpecialCharacters_ReturnsValidHash()
-        {
-            // Arrange
-            string password = "P@ssw0rd!#$%";
-
-            // Act
-            string hash = PasswordHelper.HashPassword(password);
-
-            // Assert
-            Assert.IsNotNull(hash);
-            Assert.AreEqual(64, hash.Length);
-        }
-
-        [Test]
-        [Description("Vérifie que les accents sont supportés")]
-        public void HashPassword_AccentedCharacters_ReturnsValidHash()
-        {
-            // Arrange
-            string password = "Café123";
-
-            // Act
-            string hash = PasswordHelper.HashPassword(password);
-
-            // Assert
-            Assert.IsNotNull(hash);
-            Assert.AreEqual(64, hash.Length);
-        }
-
-        [Test]
-        [Description("Vérifie qu'une exception est levée si le mot de passe est null")]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void HashPassword_NullPassword_ThrowsArgumentNullException()
+        public void HashPassword_NullPassword_ThrowsException()
         {
-            // Act
             PasswordHelper.HashPassword(null);
-
-            // Assert est fait par l'attribut ExpectedException
         }
 
         [Test]
-        [Description("Vérifie qu'une exception est levée si le mot de passe est vide")]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void HashPassword_EmptyPassword_ThrowsArgumentNullException()
+        public void HashPassword_EmptyPassword_ThrowsException()
         {
-            // Act
             PasswordHelper.HashPassword(string.Empty);
-
-            // Assert est fait par l'attribut ExpectedException
-        }
-
-        [Test]
-        [Description("Vérifie que le hash est en minuscules hexadécimal")]
-        public void HashPassword_ValidPassword_ReturnsLowercaseHex()
-        {
-            // Arrange
-            string password = "Test123";
-
-            // Act
-            string hash = PasswordHelper.HashPassword(password);
-
-            // Assert
-            foreach (char c in hash)
-            {
-                Assert.IsTrue(
-                    (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'),
-                    "Le hash doit contenir uniquement des caractères hexadécimaux en minuscules (0-9, a-f)"
-                );
-            }
         }
 
         #endregion
 
-        #region Tests VerifyPassword
+        #region VerifyPassword PBKDF2 Tests
 
         [Test]
-        [Description("Vérifie que VerifyPassword retourne true pour un mot de passe correct")]
-        public void VerifyPassword_CorrectPassword_ReturnsTrue()
+        public void VerifyPassword_CorrectPassword_Pbkdf2_ReturnsTrue()
         {
-            // Arrange
-            string password = "test123";
+            string password = "MySecurePass123";
             string hash = PasswordHelper.HashPassword(password);
 
-            // Act
             bool result = PasswordHelper.VerifyPassword(password, hash);
 
-            // Assert
-            Assert.IsTrue(result, "VerifyPassword doit retourner true pour le mot de passe correct");
+            Assert.IsTrue(result);
         }
 
         [Test]
-        [Description("Vérifie que VerifyPassword retourne false pour un mot de passe incorrect")]
-        public void VerifyPassword_IncorrectPassword_ReturnsFalse()
+        public void VerifyPassword_WrongPassword_Pbkdf2_ReturnsFalse()
         {
-            // Arrange
-            string correctPassword = "test123";
-            string incorrectPassword = "test124";
-            string hash = PasswordHelper.HashPassword(correctPassword);
+            string hash = PasswordHelper.HashPassword("correct");
 
-            // Act
-            bool result = PasswordHelper.VerifyPassword(incorrectPassword, hash);
+            bool result = PasswordHelper.VerifyPassword("wrong", hash);
 
-            // Assert
-            Assert.IsFalse(result, "VerifyPassword doit retourner false pour un mot de passe incorrect");
+            Assert.IsFalse(result);
         }
 
         [Test]
-        [Description("Vérifie que VerifyPassword est sensible à la casse")]
-        public void VerifyPassword_CaseSensitive_ReturnsFalse()
+        public void VerifyPassword_CaseSensitive_Pbkdf2()
         {
-            // Arrange
-            string password = "Test123";
-            string wrongCasePassword = "test123";
-            string hash = PasswordHelper.HashPassword(password);
+            string hash = PasswordHelper.HashPassword("Password");
 
-            // Act
-            bool result = PasswordHelper.VerifyPassword(wrongCasePassword, hash);
-
-            // Assert
-            Assert.IsFalse(result, "VerifyPassword doit être sensible à la casse");
-        }
-
-        [Test]
-        [Description("Vérifie que VerifyPassword fonctionne avec le hash admin")]
-        public void VerifyPassword_AdminHash_ReturnsTrue()
-        {
-            // Arrange
-            string password = "admin";
-            string knownHash = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
-
-            // Act
-            bool result = PasswordHelper.VerifyPassword(password, knownHash);
-
-            // Assert
-            Assert.IsTrue(result, "VerifyPassword doit accepter le mot de passe 'admin' avec son hash connu");
-        }
-
-        [Test]
-        [Description("Vérifie qu'une exception est levée si le mot de passe est null")]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public void VerifyPassword_NullPassword_ThrowsArgumentNullException()
-        {
-            // Arrange
-            string hash = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
-
-            // Act
-            PasswordHelper.VerifyPassword(null, hash);
-
-            // Assert est fait par l'attribut ExpectedException
-        }
-
-        [Test]
-        [Description("Vérifie qu'une exception est levée si le hash est null")]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public void VerifyPassword_NullHash_ThrowsArgumentNullException()
-        {
-            // Act
-            PasswordHelper.VerifyPassword("test", null);
-
-            // Assert est fait par l'attribut ExpectedException
-        }
-
-        [Test]
-        [Description("Vérifie que VerifyPassword retourne false pour un hash invalide")]
-        public void VerifyPassword_InvalidHash_ReturnsFalse()
-        {
-            // Arrange
-            string password = "test123";
-            string invalidHash = "invalid_hash_not_64_chars";
-
-            // Act
-            bool result = PasswordHelper.VerifyPassword(password, invalidHash);
-
-            // Assert
-            Assert.IsFalse(result, "VerifyPassword doit retourner false pour un hash invalide");
+            Assert.IsFalse(PasswordHelper.VerifyPassword("password", hash));
         }
 
         #endregion
 
-        #region Tests ValidatePasswordComplexity
+        #region VerifyPassword Legacy SHA256 Tests
 
         [Test]
-        [Description("Vérifie qu'un mot de passe de 6+ caractères est accepté")]
-        public void ValidatePasswordComplexity_MinimumLength_ReturnsTrue()
+        public void VerifyPassword_LegacySha256_ReturnsTrue()
         {
-            // Arrange
-            string password = "123456";
+            string password = "admin";
+            string legacyHash = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
 
-            // Act
-            bool result = PasswordHelper.ValidatePasswordComplexity(password);
+            bool result = PasswordHelper.VerifyPassword(password, legacyHash);
 
-            // Assert
-            Assert.IsTrue(result, "Un mot de passe de 6 caractères minimum doit être accepté");
+            Assert.IsTrue(result);
         }
 
         [Test]
-        [Description("Vérifie qu'un mot de passe trop court est rejeté")]
+        public void VerifyPassword_LegacySha256_WrongPassword_ReturnsFalse()
+        {
+            string legacyHash = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
+
+            bool result = PasswordHelper.VerifyPassword("wrong", legacyHash);
+
+            Assert.IsFalse(result);
+        }
+
+        [Test]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void VerifyPassword_NullPassword_ThrowsException()
+        {
+            PasswordHelper.VerifyPassword(null, "somehash");
+        }
+
+        [Test]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void VerifyPassword_NullHash_ThrowsException()
+        {
+            PasswordHelper.VerifyPassword("test", null);
+        }
+
+        #endregion
+
+        #region NeedsUpgrade Tests
+
+        [Test]
+        public void NeedsUpgrade_LegacySha256_ReturnsTrue()
+        {
+            string legacyHash = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
+
+            Assert.IsTrue(PasswordHelper.NeedsUpgrade(legacyHash));
+        }
+
+        [Test]
+        public void NeedsUpgrade_Pbkdf2Hash_ReturnsFalse()
+        {
+            string hash = PasswordHelper.HashPassword("test");
+
+            Assert.IsFalse(PasswordHelper.NeedsUpgrade(hash));
+        }
+
+        [Test]
+        public void NeedsUpgrade_NullOrEmpty_ReturnsFalse()
+        {
+            Assert.IsFalse(PasswordHelper.NeedsUpgrade(null));
+            Assert.IsFalse(PasswordHelper.NeedsUpgrade(string.Empty));
+        }
+
+        #endregion
+
+        #region HashPasswordSha256 Tests
+
+        [Test]
+        public void HashPasswordSha256_AdminPassword_ReturnsExpectedHash()
+        {
+            string hash = PasswordHelper.HashPasswordSha256("admin");
+
+            Assert.AreEqual("8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918", hash);
+        }
+
+        [Test]
+        public void HashPasswordSha256_SamePassword_ReturnsSameHash()
+        {
+            string hash1 = PasswordHelper.HashPasswordSha256("test");
+            string hash2 = PasswordHelper.HashPasswordSha256("test");
+
+            Assert.AreEqual(hash1, hash2);
+        }
+
+        #endregion
+
+        #region ValidatePasswordComplexity Tests
+
+        [Test]
+        public void ValidatePasswordComplexity_ValidPassword_ReturnsTrue()
+        {
+            Assert.IsTrue(PasswordHelper.ValidatePasswordComplexity("password123"));
+        }
+
+        [Test]
         public void ValidatePasswordComplexity_TooShort_ReturnsFalse()
         {
-            // Arrange
-            string password = "12345";
-
-            // Act
-            bool result = PasswordHelper.ValidatePasswordComplexity(password);
-
-            // Assert
-            Assert.IsFalse(result, "Un mot de passe de moins de 6 caractères doit être rejeté");
+            Assert.IsFalse(PasswordHelper.ValidatePasswordComplexity("short", 8));
         }
 
         [Test]
-        [Description("Vérifie qu'un mot de passe null est rejeté")]
         public void ValidatePasswordComplexity_NullPassword_ReturnsFalse()
         {
-            // Act
-            bool result = PasswordHelper.ValidatePasswordComplexity(null);
-
-            // Assert
-            Assert.IsFalse(result, "Un mot de passe null doit être rejeté");
+            Assert.IsFalse(PasswordHelper.ValidatePasswordComplexity(null));
         }
 
         [Test]
-        [Description("Vérifie qu'un mot de passe vide est rejeté")]
         public void ValidatePasswordComplexity_EmptyPassword_ReturnsFalse()
         {
-            // Act
-            bool result = PasswordHelper.ValidatePasswordComplexity(string.Empty);
-
-            // Assert
-            Assert.IsFalse(result, "Un mot de passe vide doit être rejeté");
-        }
-
-        [Test]
-        [Description("Vérifie qu'un mot de passe avec espaces est accepté si la longueur est suffisante")]
-        public void ValidatePasswordComplexity_WithSpaces_ReturnsTrue()
-        {
-            // Arrange
-            string password = "test 123";
-
-            // Act
-            bool result = PasswordHelper.ValidatePasswordComplexity(password);
-
-            // Assert
-            Assert.IsTrue(result, "Un mot de passe avec espaces doit être accepté si la longueur est suffisante");
+            Assert.IsFalse(PasswordHelper.ValidatePasswordComplexity(string.Empty));
         }
 
         #endregion

@@ -2,7 +2,7 @@ using System;
 using System.Data;
 using System.Data.SqlClient;
 using NUnit.Framework;
-using CYPOS;
+using cypos;
 
 namespace CYPOS.Tests
 {
