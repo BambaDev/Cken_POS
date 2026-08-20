@@ -1,4 +1,5 @@
 using System;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -8,19 +9,22 @@ namespace cypos
     /// Secure data access layer using parameterized queries to prevent SQL injection.
     /// This class replaces the legacy DataAccess.cs for all new and migrated forms.
     /// </summary>
-    /// <remarks>
-    /// Created as part of Phase 1: Security and Bug Fixes
-    /// See docs/adr/0001-migration-securedataaccess-phase1.md for design decisions
-    /// </remarks>
     public static class SecureDataAccess
     {
         #region Connection String
 
-        private static readonly string ConnectionString =
-            "Data Source=.\\SQLEXPRESS;Initial Catalog=CYPOS;Integrated Security=True;";
+        private static readonly string ConnectionString = GetConnectionString();
 
         private static readonly ErrorLog errorLog = new ErrorLog();
         private static readonly string ErrorLogPath = AppDomain.CurrentDomain.BaseDirectory + "Errors\\";
+
+        private static string GetConnectionString()
+        {
+            var cs = ConfigurationManager.ConnectionStrings["cypos.Properties.Settings.CYPOSConnectionString"];
+            if (cs != null && !string.IsNullOrEmpty(cs.ConnectionString))
+                return cs.ConnectionString;
+            return "Data Source=.\\SQLEXPRESS;Initial Catalog=CYPOS;Integrated Security=True;";
+        }
 
         #endregion
 

@@ -132,6 +132,12 @@ namespace cypos
         {
             try
             {
+                int timeout = 15;
+                string cfgTimeout = System.Configuration.ConfigurationManager.AppSettings["SessionTimeoutMinutes"];
+                if (!string.IsNullOrEmpty(cfgTimeout))
+                    int.TryParse(cfgTimeout, out timeout);
+                SessionManager.Instance.Start(this, timeout);
+
                 Clear();
                 LoadCategories();
                    

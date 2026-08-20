@@ -178,6 +178,7 @@
     <Compile Include="Class\LoginThrottler.cs" />
     <Compile Include="Class\PasswordHelper.cs" />
     <Compile Include="Class\SecureDataAccess.cs" />
+    <Compile Include="Class\SessionManager.cs" />
     <Compile Include="Controls\ColorDropDown.cs">
       <SubType>Component</SubType>
     </Compile>
