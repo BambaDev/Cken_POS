@@ -68,7 +68,7 @@ namespace cypos
 
                      if (lblTableId.Text == "-")
                      {
-                         if (DataAccess.RecordExits("tbl_Tables", "table_name", txtTableName.Text) ==1)
+                         if (SecureDataAccess.RecordExists("tbl_Tables", "table_name", txtTableName.Text))
                          {
                              Messages.InformationMessage("Table already exist");
                              txtTableName.Focus();

@@ -65,7 +65,7 @@ namespace cypos
                  {
                      if (lblLocationId.Text == "-")
                      {
-                         if (DataAccess.RecordExits("tbl_TableLocation", "location_name", txtLocation.Text) == 1)
+                         if (SecureDataAccess.RecordExists("tbl_TableLocation", "location_name", txtLocation.Text))
                          {
                              Messages.InformationMessage("Location already exist");
                              txtLocation.Focus();

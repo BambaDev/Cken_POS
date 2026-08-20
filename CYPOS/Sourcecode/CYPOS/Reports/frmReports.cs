@@ -202,11 +202,16 @@ namespace cypos
                                   "LEFT JOIN tbl_Tables ON tbl_InvoiceHeader.table_id = tbl_Tables.id " +
                                   "LEFT JOIN tbl_TableLocation ON tbl_Tables.location_id = tbl_TableLocation.Id " +
                                   "LEFT JOIN tbl_Customer ON tbl_InvoiceHeader.customer_id = tbl_Customer.id " +
-                                  "CROSS JOIN tbl_Company WHERE tbl_InvoiceHeader.invoice_date  >= '" + dtpDateFrom.Text + "' " +
-                                  "AND tbl_InvoiceHeader.invoice_date  <= '" + dtpDateTo.Text + "' ";
+                                  "CROSS JOIN tbl_Company WHERE tbl_InvoiceHeader.invoice_date >= @dateFrom " +
+                                  "AND tbl_InvoiceHeader.invoice_date <= @dateTo";
 
-            
-            DataTable dtHeader = SecureDataAccess.GetDataTable(strSQLHeader);
+            System.Data.SqlClient.SqlParameter[] rptHeaderParams = {
+                new System.Data.SqlClient.SqlParameter("@dateFrom", System.Data.SqlDbType.NVarChar) { Value = dtpDateFrom.Text },
+                new System.Data.SqlClient.SqlParameter("@dateTo", System.Data.SqlDbType.NVarChar) { Value = dtpDateTo.Text }
+            };
+
+            DataTable dtHeader = SecureDataAccess.GetDataTable(strSQLHeader, rptHeaderParams);
+
             //Invoice Detail
             string strSQLDetail = "SELECT tbl_InvoiceDetail.detail_id,tbl_InvoiceDetail.header_id,tbl_InvoiceDetail.invoice_date," +
                                   "tbl_InvoiceDetail.invoice_time,tbl_InvoiceDetail.item_code, tbl_InvoiceDetail.item_name," +
@@ -218,11 +223,15 @@ namespace cypos
                                   "tbl_InvoiceDetail.tax_apply,tbl_InvoiceDetail.log_date FROM tbl_InvoiceDetail " +
                                   "INNER JOIN tbl_Item ON tbl_InvoiceDetail.item_code = tbl_Item.item_code " +
                                   "INNER JOIN tbl_Category ON tbl_Item.category_id = tbl_Category.id " +
-                                  "WHERE tbl_InvoiceDetail.invoice_date  >= '" + dtpDateFrom.Text + "' " +
-                                  "AND tbl_InvoiceDetail.invoice_date  <= '" + dtpDateTo.Text + "' ";
+                                  "WHERE tbl_InvoiceDetail.invoice_date >= @dateFrom " +
+                                  "AND tbl_InvoiceDetail.invoice_date <= @dateTo";
 
-            
-            DataTable dtDetail = SecureDataAccess.GetDataTable(strSQLDetail);
+            System.Data.SqlClient.SqlParameter[] rptDetailParams = {
+                new System.Data.SqlClient.SqlParameter("@dateFrom", System.Data.SqlDbType.NVarChar) { Value = dtpDateFrom.Text },
+                new System.Data.SqlClient.SqlParameter("@dateTo", System.Data.SqlDbType.NVarChar) { Value = dtpDateTo.Text }
+            };
+
+            DataTable dtDetail = SecureDataAccess.GetDataTable(strSQLDetail, rptDetailParams);
 
             this.rptViewer.LocalReport.DataSources.Clear();
 
@@ -267,11 +276,16 @@ namespace cypos
                                   "LEFT JOIN tbl_Tables ON tbl_InvoiceHeader.table_id = tbl_Tables.id " +
                                   "LEFT JOIN tbl_TableLocation ON tbl_Tables.location_id = tbl_TableLocation.Id " +
                                   "LEFT JOIN tbl_Customer ON tbl_InvoiceHeader.customer_id = tbl_Customer.id " +
-                                  "CROSS JOIN tbl_Company WHERE tbl_InvoiceHeader.invoice_date  >= '" + dtpDateFrom.Text + "' " +
-                                  "AND tbl_InvoiceHeader.invoice_date  <= '" + dtpDateTo.Text + "' ";
+                                  "CROSS JOIN tbl_Company WHERE tbl_InvoiceHeader.invoice_date >= @dateFrom " +
+                                  "AND tbl_InvoiceHeader.invoice_date <= @dateTo";
 
-            
-            DataTable dtHeader = SecureDataAccess.GetDataTable(strSQLHeader);
+            System.Data.SqlClient.SqlParameter[] rptHeaderParams = {
+                new System.Data.SqlClient.SqlParameter("@dateFrom", System.Data.SqlDbType.NVarChar) { Value = dtpDateFrom.Text },
+                new System.Data.SqlClient.SqlParameter("@dateTo", System.Data.SqlDbType.NVarChar) { Value = dtpDateTo.Text }
+            };
+
+            DataTable dtHeader = SecureDataAccess.GetDataTable(strSQLHeader, rptHeaderParams);
+
             //Invoice Detail
             string strSQLDetail = "SELECT tbl_InvoiceDetail.detail_id,tbl_InvoiceDetail.header_id,tbl_InvoiceDetail.invoice_date," +
                                   "tbl_InvoiceDetail.invoice_time,tbl_InvoiceDetail.item_code, tbl_InvoiceDetail.item_name," +
@@ -283,11 +297,15 @@ namespace cypos
                                   "tbl_InvoiceDetail.tax_apply,tbl_InvoiceDetail.log_date FROM tbl_InvoiceDetail " +
                                   "INNER JOIN tbl_Item ON tbl_InvoiceDetail.item_code = tbl_Item.item_code " +
                                   "INNER JOIN tbl_Category ON tbl_Item.category_id = tbl_Category.id " +
-                                  "WHERE tbl_InvoiceDetail.invoice_date  >= '" + dtpDateFrom.Text + "' " +
-                                  "AND tbl_InvoiceDetail.invoice_date  <= '" + dtpDateTo.Text + "' ";
+                                  "WHERE tbl_InvoiceDetail.invoice_date >= @dateFrom " +
+                                  "AND tbl_InvoiceDetail.invoice_date <= @dateTo";
 
-            
-            DataTable dtDetail = SecureDataAccess.GetDataTable(strSQLDetail);
+            System.Data.SqlClient.SqlParameter[] rptDetailParams = {
+                new System.Data.SqlClient.SqlParameter("@dateFrom", System.Data.SqlDbType.NVarChar) { Value = dtpDateFrom.Text },
+                new System.Data.SqlClient.SqlParameter("@dateTo", System.Data.SqlDbType.NVarChar) { Value = dtpDateTo.Text }
+            };
+
+            DataTable dtDetail = SecureDataAccess.GetDataTable(strSQLDetail, rptDetailParams);
 
             this.rptViewer.LocalReport.DataSources.Clear();
 
@@ -338,15 +356,20 @@ namespace cypos
                                   "LEFT JOIN tbl_Tables ON tbl_InvoiceHeader.table_id = tbl_Tables.id " +
                                   "LEFT JOIN tbl_TableLocation ON tbl_Tables.location_id = tbl_TableLocation.Id " +
                                   "LEFT JOIN tbl_Customer ON tbl_InvoiceHeader.customer_id = tbl_Customer.id " +
-                                  "CROSS JOIN tbl_Company WHERE tbl_InvoiceHeader.invoice_date  >= '" + dtpDateFrom.Text + "' " +
-                                  "AND tbl_InvoiceHeader.invoice_date  <= '" + dtpDateTo.Text + "'";
+                                  "CROSS JOIN tbl_Company WHERE tbl_InvoiceHeader.invoice_date >= @dateFrom " +
+                                  "AND tbl_InvoiceHeader.invoice_date <= @dateTo";
+
+            var paramList = new System.Collections.Generic.List<System.Data.SqlClient.SqlParameter>();
+            paramList.Add(new System.Data.SqlClient.SqlParameter("@dateFrom", System.Data.SqlDbType.NVarChar) { Value = dtpDateFrom.Text });
+            paramList.Add(new System.Data.SqlClient.SqlParameter("@dateTo", System.Data.SqlDbType.NVarChar) { Value = dtpDateTo.Text });
+
             if (cmbSearch.Text != "All")
             {
-                strSQLHeader += " AND tbl_InvoiceHeader.payment_type='" + cmbSearch.Text + "'";
+                strSQLHeader += " AND tbl_InvoiceHeader.payment_type = @paymentType";
+                paramList.Add(new System.Data.SqlClient.SqlParameter("@paymentType", System.Data.SqlDbType.NVarChar) { Value = cmbSearch.Text });
             }
 
-            
-            DataTable dtHeader = SecureDataAccess.GetDataTable(strSQLHeader);
+            DataTable dtHeader = SecureDataAccess.GetDataTable(strSQLHeader, paramList.ToArray());
 
             this.rptViewer.LocalReport.DataSources.Clear();
             ReportDataSource dsHeader = new ReportDataSource("dsHeader", dtHeader);
@@ -393,11 +416,15 @@ namespace cypos
                                   "LEFT JOIN tbl_Tables ON tbl_InvoiceHeader.table_id = tbl_Tables.id " +
                                   "LEFT JOIN tbl_TableLocation ON tbl_Tables.location_id = tbl_TableLocation.Id " +
                                   "LEFT JOIN tbl_Customer ON tbl_InvoiceHeader.customer_id = tbl_Customer.id " +
-                                  "CROSS JOIN tbl_Company WHERE tbl_InvoiceHeader.invoice_date  >= '" + dtpDateFrom.Text + "' " +
-                                  "AND tbl_InvoiceHeader.invoice_date  <= '" + dtpDateTo.Text + "' ";
+                                  "CROSS JOIN tbl_Company WHERE tbl_InvoiceHeader.invoice_date >= @dateFrom " +
+                                  "AND tbl_InvoiceHeader.invoice_date <= @dateTo";
 
-            
-            DataTable dtHeader = SecureDataAccess.GetDataTable(strSQLHeader);
+            var headerParams = new System.Collections.Generic.List<System.Data.SqlClient.SqlParameter>();
+            headerParams.Add(new System.Data.SqlClient.SqlParameter("@dateFrom", System.Data.SqlDbType.NVarChar) { Value = dtpDateFrom.Text });
+            headerParams.Add(new System.Data.SqlClient.SqlParameter("@dateTo", System.Data.SqlDbType.NVarChar) { Value = dtpDateTo.Text });
+
+            DataTable dtHeader = SecureDataAccess.GetDataTable(strSQLHeader, headerParams.ToArray());
+
             //Invoice Detail
             string strSQLDetail = "SELECT tbl_InvoiceDetail.detail_id,tbl_InvoiceDetail.header_id,tbl_InvoiceDetail.invoice_date," +
                                   "tbl_InvoiceDetail.invoice_time,tbl_InvoiceDetail.item_code, tbl_InvoiceDetail.item_name," +
@@ -409,15 +436,20 @@ namespace cypos
                                   "tbl_InvoiceDetail.tax_apply,tbl_InvoiceDetail.log_date FROM tbl_InvoiceDetail " +
                                   "INNER JOIN tbl_Item ON tbl_InvoiceDetail.item_code = tbl_Item.item_code " +
                                   "INNER JOIN tbl_Category ON tbl_Item.category_id = tbl_Category.id " +
-                                  "WHERE tbl_InvoiceDetail.invoice_date  >= '" + dtpDateFrom.Text + "' " +
-                                  "AND tbl_InvoiceDetail.invoice_date  <= '" + dtpDateTo.Text + "' ";
+                                  "WHERE tbl_InvoiceDetail.invoice_date >= @dateFrom " +
+                                  "AND tbl_InvoiceDetail.invoice_date <= @dateTo";
+
+            var detailParams = new System.Collections.Generic.List<System.Data.SqlClient.SqlParameter>();
+            detailParams.Add(new System.Data.SqlClient.SqlParameter("@dateFrom", System.Data.SqlDbType.NVarChar) { Value = dtpDateFrom.Text });
+            detailParams.Add(new System.Data.SqlClient.SqlParameter("@dateTo", System.Data.SqlDbType.NVarChar) { Value = dtpDateTo.Text });
+
             if (cmbSearch.Text != "All Categories")
             {
-                strSQLDetail += " AND tbl_Category.category_name='" + cmbSearch.Text + "'";
+                strSQLDetail += " AND tbl_Category.category_name = @categoryName";
+                detailParams.Add(new System.Data.SqlClient.SqlParameter("@categoryName", System.Data.SqlDbType.NVarChar) { Value = cmbSearch.Text });
             }
 
-            
-            DataTable dtDetail = SecureDataAccess.GetDataTable(strSQLDetail);
+            DataTable dtDetail = SecureDataAccess.GetDataTable(strSQLDetail, detailParams.ToArray());
 
             this.rptViewer.LocalReport.DataSources.Clear();
 
@@ -449,12 +481,14 @@ namespace cypos
                                   "FROM tbl_Item INNER JOIN tbl_Category ON tbl_Item.category_id = tbl_Category.id " +
                                   "CROSS JOIN tbl_Company WHERE tbl_Item.stock_item=1";
 
+            var stockParams = new System.Collections.Generic.List<System.Data.SqlClient.SqlParameter>();
             if (cmbSearch.Text != "All Categories")
             {
-                strSQLItem += " AND tbl_Category.category_name='" + cmbSearch.Text + "'";
+                strSQLItem += " AND tbl_Category.category_name = @categoryName";
+                stockParams.Add(new System.Data.SqlClient.SqlParameter("@categoryName", System.Data.SqlDbType.NVarChar) { Value = cmbSearch.Text });
             }
-            
-            DataTable dtItems = SecureDataAccess.GetDataTable(strSQLItem);
+
+            DataTable dtItems = SecureDataAccess.GetDataTable(strSQLItem, stockParams.ToArray());
 
             this.rptViewer.LocalReport.DataSources.Clear();
 
@@ -483,12 +517,14 @@ namespace cypos
                                   "FROM tbl_Item INNER JOIN tbl_Category ON tbl_Item.category_id = tbl_Category.id " +
                                   "CROSS JOIN tbl_Company WHERE tbl_Item.stock_item=1 AND tbl_Item.stock_quantity <= tbl_Item.reorder_level";
 
+            var reorderParams = new System.Collections.Generic.List<System.Data.SqlClient.SqlParameter>();
             if (cmbSearch.Text != "All Categories")
             {
-                strSQLItem += " AND tbl_Category.category_name='" + cmbSearch.Text + "'";
+                strSQLItem += " AND tbl_Category.category_name = @categoryName";
+                reorderParams.Add(new System.Data.SqlClient.SqlParameter("@categoryName", System.Data.SqlDbType.NVarChar) { Value = cmbSearch.Text });
             }
-            
-            DataTable dtItems = SecureDataAccess.GetDataTable(strSQLItem);
+
+            DataTable dtItems = SecureDataAccess.GetDataTable(strSQLItem, reorderParams.ToArray());
 
             this.rptViewer.LocalReport.DataSources.Clear();
 

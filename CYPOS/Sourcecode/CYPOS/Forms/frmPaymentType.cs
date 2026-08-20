@@ -65,7 +65,7 @@ namespace cypos
                  {
                      if (lblPayTypeId.Text == "-")
                      {
-                         if (DataAccess.RecordExits("tbl_PaymentType", "payment_type", txtPayType.Text) == 1)
+                         if (SecureDataAccess.RecordExists("tbl_PaymentType", "payment_type", txtPayType.Text))
                          {
                              Messages.InformationMessage("Payment type already exist");
                              txtPayType.Focus();
