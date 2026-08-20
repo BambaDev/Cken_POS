@@ -356,6 +356,7 @@ namespace cypos
                     SecureDataAccess.ExecuteNonQuery(strSQLKotNo, kotParams);
                 }
 
+                Settings.RefreshCache();
                 _frmMain.Clear();
                 OpenedForms.Close();
             }

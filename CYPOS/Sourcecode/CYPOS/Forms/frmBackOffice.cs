@@ -142,7 +142,33 @@ namespace cypos
 
         private void frmBackOffice_Load(object sender, EventArgs e)
         {
+            try
+            {
+                LoadDashboard();
+            }
+            catch
+            {
+            }
+        }
 
+        private void LoadDashboard()
+        {
+            try
+            {
+                decimal todaySales = DashboardStats.GetTodaySales();
+                int todayOrders = DashboardStats.GetTodayOrderCount();
+                decimal todayExpenses = DashboardStats.GetTodayExpenses();
+                decimal monthSales = DashboardStats.GetMonthSales();
+
+                this.Text = string.Format("Back Office | Today: {0} ({1} orders) | Expenses: {2} | Month: {3}",
+                    Currency.Format(todaySales),
+                    todayOrders,
+                    Currency.Format(todayExpenses),
+                    Currency.Format(monthSales));
+            }
+            catch
+            {
+            }
         }
 
         private void btnPurchase_Click(object sender, EventArgs e)

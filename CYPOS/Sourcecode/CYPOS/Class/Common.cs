@@ -131,202 +131,119 @@ namespace cypos
 
     public static class Settings
     {
+        private static DataRow _cache;
+        private static DateTime _cacheTime = DateTime.MinValue;
+        private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
+
+        private static DataRow GetSettings()
+        {
+            if (_cache == null || (DateTime.Now - _cacheTime) > CacheDuration)
+            {
+                string strSQL = "SELECT TOP 1 * FROM tbl_Settings";
+                DataTable dt = SecureDataAccess.GetDataTable(strSQL);
+                if (dt.Rows.Count > 0)
+                {
+                    _cache = dt.Rows[0];
+                    _cacheTime = DateTime.Now;
+                }
+            }
+            return _cache;
+        }
+
+        public static void RefreshCache()
+        {
+            _cache = null;
+            _cacheTime = DateTime.MinValue;
+        }
+
         public static int ItemsPerPage
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 items_per_page FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                int iValue = int.Parse(dtSettings.Rows[0]["items_per_page"].ToString());
-                return iValue;
-            }
+            get { return int.Parse(GetSettings()["items_per_page"].ToString()); }
         }
 
         public static bool AskTable
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 ask_table FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                bool bValue = bool.Parse(dtSettings.Rows[0]["ask_table"].ToString());
-                return bValue;
-            }
+            get { return bool.Parse(GetSettings()["ask_table"].ToString()); }
         }
 
         public static bool AskGuestCount
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 ask_guest_count FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                bool bValue = bool.Parse(dtSettings.Rows[0]["ask_guest_count"].ToString());
-                return bValue;
-            }
+            get { return bool.Parse(GetSettings()["ask_guest_count"].ToString()); }
         }
 
         public static bool AskWaiter
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 ask_waiter FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                bool bValue = bool.Parse(dtSettings.Rows[0]["ask_waiter"].ToString());
-                return bValue;
-            }
+            get { return bool.Parse(GetSettings()["ask_waiter"].ToString()); }
         }
 
         public static bool AutoHoldId
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 auto_hold_id FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                bool bValue = bool.Parse(dtSettings.Rows[0]["auto_hold_id"].ToString());
-                return bValue;
-            }
+            get { return bool.Parse(GetSettings()["auto_hold_id"].ToString()); }
         }
 
         public static int DefaultDiscount
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 default_discount_rate FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                int iValue = int.Parse(dtSettings.Rows[0]["default_discount_rate"].ToString());
-                return iValue;
-            }
+            get { return int.Parse(GetSettings()["default_discount_rate"].ToString()); }
         }
 
         public static int DefaultOrderType
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 default_order_type FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                int iValue = int.Parse(dtSettings.Rows[0]["default_order_type"].ToString());
-                return iValue;
-            }
+            get { return int.Parse(GetSettings()["default_order_type"].ToString()); }
         }
 
         public static bool EnableServiceCharge
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 enable_sc FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                bool Value = bool.Parse(dtSettings.Rows[0]["enable_sc"].ToString());
-                return Value;
-            }
+            get { return bool.Parse(GetSettings()["enable_sc"].ToString()); }
         }
 
         public static double ServiceChargeRate
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 sc_rate FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                double dblValue = double.Parse(dtSettings.Rows[0]["sc_rate"].ToString());
-                return dblValue;
-            }
+            get { return double.Parse(GetSettings()["sc_rate"].ToString()); }
         }
 
         public static bool CustomerAfterDO
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 customer_after_do FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                bool Value = bool.Parse(dtSettings.Rows[0]["customer_after_do"].ToString());
-                return Value;
-            }
+            get { return bool.Parse(GetSettings()["customer_after_do"].ToString()); }
         }
 
         public static bool AutoItemNo
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 auto_item_no FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                bool Value = bool.Parse(dtSettings.Rows[0]["auto_item_no"].ToString());
-                return Value;
-            }
+            get { return bool.Parse(GetSettings()["auto_item_no"].ToString()); }
         }
 
         public static bool CustomerAfterPO
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 customer_after_po FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                bool Value = bool.Parse(dtSettings.Rows[0]["customer_after_po"].ToString());
-                return Value;
-            }
+            get { return bool.Parse(GetSettings()["customer_after_po"].ToString()); }
         }
 
         public static bool PreviewBeforePrint
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 preview_before_print FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                bool Value = bool.Parse(dtSettings.Rows[0]["preview_before_print"].ToString());
-                return Value;
-            }
+            get { return bool.Parse(GetSettings()["preview_before_print"].ToString()); }
         }
 
         public static bool ShowOtAfterBill
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 show_ot_after FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                bool Value = bool.Parse(dtSettings.Rows[0]["show_ot_after"].ToString());
-                return Value;
-            }
+            get { return bool.Parse(GetSettings()["show_ot_after"].ToString()); }
         }
-        //Invoice No
+
         public static string InvoiceNoPrefix
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 invoice_no_prefix FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                string Value = dtSettings.Rows[0]["invoice_no_prefix"].ToString();
-                return Value;
-            }
+            get { return GetSettings()["invoice_no_prefix"].ToString(); }
         }
 
         public static bool ShowLeadingZeros
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 show_leading_zeros FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                bool Value = bool.Parse(dtSettings.Rows[0]["show_leading_zeros"].ToString());
-                return Value;
-            }
+            get { return bool.Parse(GetSettings()["show_leading_zeros"].ToString()); }
         }
 
         public static int LeadingZerosCount
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 zeros_count FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                int Value = int.Parse(dtSettings.Rows[0]["zeros_count"].ToString());
-                return Value;
-            }
+            get { return int.Parse(GetSettings()["zeros_count"].ToString()); }
         }
 
         public static int StartingInvoiceNo
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 starting_invoice_no FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                int Value = int.Parse(dtSettings.Rows[0]["starting_invoice_no"].ToString());
-                return Value;
-            }
+            get { return int.Parse(GetSettings()["starting_invoice_no"].ToString()); }
         }
 
         public static int LastInvoiceAutoNo
@@ -344,61 +261,32 @@ namespace cypos
         {
             get
             {
-                string strValue = string.Empty;
-                string strSQL = "SELECT TOP 1 invoice_no FROM tbl_InvoiceNo ORDER BY auto_id DESC"; 
+                string strSQL = "SELECT TOP 1 invoice_no FROM tbl_InvoiceNo ORDER BY auto_id DESC";
                 DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
                 if (dtSettings.Rows.Count != 0)
-                {
-                    strValue = dtSettings.Rows[0]["invoice_no"].ToString();
-                }
-                return strValue;
+                    return dtSettings.Rows[0]["invoice_no"].ToString();
+                return string.Empty;
             }
         }
 
-        //Kot No
-
         public static string KotNoPrefix
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 kot_no_prefix FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                string Value = dtSettings.Rows[0]["kot_no_prefix"].ToString();
-                return Value;
-            }
+            get { return GetSettings()["kot_no_prefix"].ToString(); }
         }
 
         public static bool KotLeadingZeros
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 kot_leading_zeros FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                bool Value = bool.Parse(dtSettings.Rows[0]["kot_leading_zeros"].ToString());
-                return Value;
-            }
+            get { return bool.Parse(GetSettings()["kot_leading_zeros"].ToString()); }
         }
 
         public static int KotZerosCount
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 kot_zeros_count FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                int Value = int.Parse(dtSettings.Rows[0]["kot_zeros_count"].ToString());
-                return Value;
-            }
+            get { return int.Parse(GetSettings()["kot_zeros_count"].ToString()); }
         }
 
         public static int StartingKotNo
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 kot_starting_no FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                int Value = int.Parse(dtSettings.Rows[0]["kot_starting_no"].ToString());
-                return Value;
-            }
+            get { return int.Parse(GetSettings()["kot_starting_no"].ToString()); }
         }
 
         public static int LastKotAutoNo
@@ -411,7 +299,6 @@ namespace cypos
                 return Value;
             }
         }
-
 
         public static int LastHoldAutoNo
         {
@@ -437,46 +324,22 @@ namespace cypos
 
         public static string InvoicePrinter
         {
-            get
-            {
-                string strSQL = "SELECT invoice_printer FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                string strValue = dtSettings.Rows[0]["invoice_printer"].ToString();
-                return strValue;
-            }
+            get { return GetSettings()["invoice_printer"].ToString(); }
         }
 
         public static string KotPrinter
         {
-            get
-            {
-                string strSQL = "SELECT kot_printer FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                string strValue = dtSettings.Rows[0]["kot_printer"].ToString();
-                return strValue;
-            }
+            get { return GetSettings()["kot_printer"].ToString(); }
         }
 
         public static bool PrintKotAfterHold
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 print_kot_after_hold FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                bool Value = bool.Parse(dtSettings.Rows[0]["print_kot_after_hold"].ToString());
-                return Value;
-            }
+            get { return bool.Parse(GetSettings()["print_kot_after_hold"].ToString()); }
         }
 
         public static bool ViewKotB4Print
         {
-            get
-            {
-                string strSQL = "SELECT TOP 1 kot_view_before_print FROM tbl_Settings";
-                DataTable dtSettings = SecureDataAccess.GetDataTable(strSQL);
-                bool Value = bool.Parse(dtSettings.Rows[0]["kot_view_before_print"].ToString());
-                return Value;
-            }
+            get { return bool.Parse(GetSettings()["kot_view_before_print"].ToString()); }
         }
 
     }
