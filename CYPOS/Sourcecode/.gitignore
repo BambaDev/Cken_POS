@@ -1,0 +1,77 @@
+## Visual Studio temporaire et build
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww]in32/
+[Aa]rm/
+[Aa]rm64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio cache/options
+.vs/
+.vscode/
+
+# ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# Fichiers temporaires
+*.tmp
+*.temp
+*.log
+*.swp
+*~
+
+# NuGet Packages
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+
+# Test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NCrunch
+_NCrunch_*
+.*crunch*.local.xml
+nCrunchTemp_*
+
+# Backups
+*.bak
+*.backup
+
+# SQL Server files
+*.mdf
+*.ldf
+*.ndf
+
+# Fichiers spécifiques CYPOS
+Errors/*.txt
+ItemImages/*
+Images/*.jpg
+Images/*.png
+!Images/default.png
+
+# Documentation temporaire
+docs/temp/
+
+# Connection strings sensibles (si applicable)
+**/Web.config
+**/App.config
+*.config.user

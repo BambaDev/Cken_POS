@@ -1,0 +1,60 @@
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+
+# NuGet
+packages/
+*.nupkg
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Sensitive files
+User Name & Password.txt
+
+# Compiled binaries
+*.exe
+*.dll
+*.pdb
+*.cache
+*.ilk
+*.log
+*.lib
+*.exp
+*.app
+
+# IDE
+.idea/
+*.resharper
+
+# OS files
+.DS_Store
+
+# Word temp files
+~$*
+
+# Database files (too large for git)
+*.mdf
+*.ldf
+
+# Claude Code internal
+.claude/
+.agents/
+.continue/
+.qwen/
+.windsurf/
