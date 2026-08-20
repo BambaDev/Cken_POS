@@ -267,13 +267,33 @@ namespace cypos
 
                 if (dt.Rows.Count == 0)
                 {
-                    return false; // User not found
+                    return false;
                 }
 
                 string storedHash = dt.Rows[0]["password"].ToString();
                 userType = dt.Rows[0]["user_type"].ToString();
 
-                return PasswordHelper.VerifyPassword(password, storedHash);
+                bool isValid = PasswordHelper.VerifyPassword(password, storedHash);
+
+                if (isValid && PasswordHelper.NeedsUpgrade(storedHash))
+                {
+                    try
+                    {
+                        string newHash = PasswordHelper.HashPassword(password);
+                        string updateSql = "UPDATE tbl_User SET password = @newHash WHERE user_name = @username";
+                        SqlParameter[] updateParams = {
+                            new SqlParameter("@newHash", SqlDbType.NVarChar, 200) { Value = newHash },
+                            new SqlParameter("@username", SqlDbType.NVarChar, 50) { Value = username }
+                        };
+                        ExecuteNonQuery(updateSql, updateParams);
+                    }
+                    catch (Exception ex)
+                    {
+                        errorLog.Write(ex.Message, "SecureDataAccess.AuthenticateUser.UpgradeHash", ErrorLogPath);
+                    }
+                }
+
+                return isValid;
             }
             catch (Exception ex)
             {

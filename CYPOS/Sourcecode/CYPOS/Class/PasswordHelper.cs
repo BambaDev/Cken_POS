@@ -6,32 +6,20 @@ namespace cypos
 {
     /// <summary>
     /// Helper class for secure password hashing and verification.
-    /// Uses SHA256 for Phase 1. Phase 2 will migrate to BCrypt or Argon2.
+    /// Uses PBKDF2 (RFC 2898) with per-user salt for strong security.
+    /// Maintains backward compatibility with legacy SHA256 hashes from Phase 1.
     /// </summary>
-    /// <remarks>
-    /// Created as part of Phase 1: Security and Bug Fixes
-    /// See docs/adr/0001-migration-securedataaccess-phase1.md for design decisions
-    ///
-    /// SECURITY NOTE:
-    /// - SHA256 without salt is used for Phase 1 for simplicity
-    /// - This is acceptable for Phase 1 given the migration timeline
-    /// - Phase 2 will implement BCrypt or Argon2 with per-user salt for better security
-    /// - See ADR 0002 (to be created in Phase 2) for future improvements
-    /// </remarks>
     public static class PasswordHelper
     {
+        private const int SaltSize = 16;
+        private const int HashSize = 32;
+        private const int Iterations = 10000;
+        private const string Pbkdf2Prefix = "PBKDF2$";
+
         /// <summary>
-        /// Hashes a plain text password using SHA256.
+        /// Hashes a password using PBKDF2 with a random salt.
+        /// Output format: "PBKDF2$iterations$base64salt$base64hash"
         /// </summary>
-        /// <param name="password">Plain text password to hash</param>
-        /// <returns>64-character hexadecimal hash string</returns>
-        /// <exception cref="ArgumentNullException">Thrown when password is null or empty</exception>
-        /// <example>
-        /// <code>
-        /// string hashedPassword = PasswordHelper.HashPassword("admin");
-        /// // Returns: "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
-        /// </code>
-        /// </example>
         public static string HashPassword(string password)
         {
             if (string.IsNullOrEmpty(password))
@@ -39,42 +27,25 @@ namespace cypos
                 throw new ArgumentNullException("password", "Password cannot be null or empty");
             }
 
-            using (SHA256 sha256 = SHA256.Create())
+            byte[] salt = new byte[SaltSize];
+            using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
             {
-                // Convert the password string to bytes
-                byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
-
-                // Compute the hash
-                byte[] hashBytes = sha256.ComputeHash(passwordBytes);
-
-                // Convert hash bytes to hexadecimal string
-                StringBuilder builder = new StringBuilder();
-                foreach (byte b in hashBytes)
-                {
-                    builder.Append(b.ToString("x2")); // x2 = lowercase hexadecimal, 2 digits
-                }
-
-                return builder.ToString();
+                rng.GetBytes(salt);
             }
+
+            byte[] hash = ComputePbkdf2(password, salt, Iterations, HashSize);
+
+            return string.Format("{0}{1}${2}${3}",
+                Pbkdf2Prefix,
+                Iterations,
+                Convert.ToBase64String(salt),
+                Convert.ToBase64String(hash));
         }
 
         /// <summary>
-        /// Verifies a plain text password against a stored hash.
+        /// Verifies a password against a stored hash.
+        /// Supports both new PBKDF2 format and legacy SHA256 hashes.
         /// </summary>
-        /// <param name="password">Plain text password to verify</param>
-        /// <param name="storedHash">Stored hash to compare against</param>
-        /// <returns>True if password matches the hash, false otherwise</returns>
-        /// <exception cref="ArgumentNullException">Thrown when password or storedHash is null or empty</exception>
-        /// <example>
-        /// <code>
-        /// string storedHash = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
-        /// bool isValid = PasswordHelper.VerifyPassword("admin", storedHash);
-        /// // Returns: true
-        ///
-        /// bool isInvalid = PasswordHelper.VerifyPassword("wrongpassword", storedHash);
-        /// // Returns: false
-        /// </code>
-        /// </example>
         public static bool VerifyPassword(string password, string storedHash)
         {
             if (string.IsNullOrEmpty(password))
@@ -89,36 +60,35 @@ namespace cypos
 
             try
             {
-                // Hash the input password
-                string passwordHash = HashPassword(password);
-
-                // Compare hashes using case-insensitive comparison
-                // StringComparer.OrdinalIgnoreCase is safe for hash comparison
-                // and prevents timing attacks by using constant-time comparison
-                return StringComparer.OrdinalIgnoreCase.Compare(passwordHash, storedHash) == 0;
+                if (storedHash.StartsWith(Pbkdf2Prefix))
+                {
+                    return VerifyPbkdf2(password, storedHash);
+                }
+                else
+                {
+                    return VerifyLegacySha256(password, storedHash);
+                }
             }
             catch (Exception)
             {
-                // If any error occurs during verification, return false for security
                 return false;
             }
         }
 
         /// <summary>
-        /// Validates password complexity (for future use in Phase 2).
-        /// Currently not enforced but available for future implementation.
+        /// Checks if a stored hash uses the legacy SHA256 format and needs upgrade.
         /// </summary>
-        /// <param name="password">Password to validate</param>
-        /// <param name="minLength">Minimum length required (default: 8)</param>
-        /// <param name="requireUppercase">Require at least one uppercase letter (default: false)</param>
-        /// <param name="requireLowercase">Require at least one lowercase letter (default: false)</param>
-        /// <param name="requireDigit">Require at least one digit (default: false)</param>
-        /// <param name="requireSpecialChar">Require at least one special character (default: false)</param>
-        /// <returns>True if password meets complexity requirements, false otherwise</returns>
-        /// <remarks>
-        /// This method is prepared for Phase 2 password policy enforcement.
-        /// Currently not used but can be integrated into user creation/update forms.
-        /// </remarks>
+        public static bool NeedsUpgrade(string storedHash)
+        {
+            if (string.IsNullOrEmpty(storedHash))
+                return false;
+
+            return !storedHash.StartsWith(Pbkdf2Prefix);
+        }
+
+        /// <summary>
+        /// Validates password complexity.
+        /// </summary>
         public static bool ValidatePasswordComplexity(
             string password,
             int minLength = 8,
@@ -130,28 +100,97 @@ namespace cypos
             if (string.IsNullOrEmpty(password))
                 return false;
 
-            // Check minimum length
             if (password.Length < minLength)
                 return false;
 
-            // Check uppercase requirement
             if (requireUppercase && !ContainsUppercase(password))
                 return false;
 
-            // Check lowercase requirement
             if (requireLowercase && !ContainsLowercase(password))
                 return false;
 
-            // Check digit requirement
             if (requireDigit && !ContainsDigit(password))
                 return false;
 
-            // Check special character requirement
             if (requireSpecialChar && !ContainsSpecialChar(password))
                 return false;
 
             return true;
         }
+
+        #region Legacy SHA256 support
+
+        /// <summary>
+        /// Hashes using legacy SHA256 (for migration utility only).
+        /// </summary>
+        public static string HashPasswordSha256(string password)
+        {
+            if (string.IsNullOrEmpty(password))
+            {
+                throw new ArgumentNullException("password", "Password cannot be null or empty");
+            }
+
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+                byte[] hashBytes = sha256.ComputeHash(passwordBytes);
+
+                StringBuilder builder = new StringBuilder();
+                foreach (byte b in hashBytes)
+                {
+                    builder.Append(b.ToString("x2"));
+                }
+                return builder.ToString();
+            }
+        }
+
+        private static bool VerifyLegacySha256(string password, string storedHash)
+        {
+            string passwordHash = HashPasswordSha256(password);
+            return StringComparer.OrdinalIgnoreCase.Compare(passwordHash, storedHash) == 0;
+        }
+
+        #endregion
+
+        #region PBKDF2 Implementation
+
+        private static bool VerifyPbkdf2(string password, string storedHash)
+        {
+            string[] parts = storedHash.Split('$');
+            if (parts.Length != 4)
+                return false;
+
+            int iterations = int.Parse(parts[1]);
+            byte[] salt = Convert.FromBase64String(parts[2]);
+            byte[] expectedHash = Convert.FromBase64String(parts[3]);
+
+            byte[] actualHash = ComputePbkdf2(password, salt, iterations, expectedHash.Length);
+
+            return ConstantTimeEquals(expectedHash, actualHash);
+        }
+
+        private static byte[] ComputePbkdf2(string password, byte[] salt, int iterations, int outputBytes)
+        {
+            using (Rfc2898DeriveBytes pbkdf2 = new Rfc2898DeriveBytes(password, salt, iterations))
+            {
+                return pbkdf2.GetBytes(outputBytes);
+            }
+        }
+
+        private static bool ConstantTimeEquals(byte[] a, byte[] b)
+        {
+            if (a.Length != b.Length)
+                return false;
+
+            int diff = 0;
+            for (int i = 0; i < a.Length; i++)
+            {
+                diff |= a[i] ^ b[i];
+            }
+            return diff == 0;
+        }
+
+        #endregion
 
         #region Private Helper Methods
 
@@ -197,20 +236,14 @@ namespace cypos
 
         #endregion
 
-        #region Utility Methods for Migration
+        #region Utility Methods
 
         /// <summary>
-        /// Gets the expected hash for a known password (for testing/migration purposes).
+        /// Gets the expected SHA256 hash for a known password (testing/migration).
         /// </summary>
-        /// <param name="password">Password to hash</param>
-        /// <returns>Hash string for verification</returns>
-        /// <remarks>
-        /// Useful for migration scripts and testing.
-        /// Example: admin/admin -> 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
-        /// </remarks>
         public static string GetKnownPasswordHash(string password)
         {
-            return HashPassword(password);
+            return HashPasswordSha256(password);
         }
 
         #endregion

@@ -357,7 +357,6 @@
     <Compile Include="Forms\frmTableView.Designer.cs">
       <DependentUpon>frmTableView.cs</DependentUpon>
     </Compile>
-    <Compile Include="Class\DataAccess.cs" />
     <Compile Include="Forms\frmExpenses.cs">
       <SubType>Form</SubType>
     </Compile>
