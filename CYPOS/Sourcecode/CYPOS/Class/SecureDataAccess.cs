@@ -249,19 +249,25 @@ namespace cypos
         {
             try
             {
-                string sql = @"IF NOT EXISTS (SELECT 1 FROM sys.columns
+                string addCol = @"IF NOT EXISTS (SELECT 1 FROM sys.columns
                     WHERE object_id = OBJECT_ID('tbl_User') AND name = 'login_code')
-                BEGIN
-                    ALTER TABLE tbl_User ADD login_code NVARCHAR(4) NULL;
-                    UPDATE tbl_User SET login_code = RIGHT('00' + CAST(id AS VARCHAR),
+                    ALTER TABLE tbl_User ADD login_code NVARCHAR(4) NULL";
+                ExecuteNonQuery(addCol);
+
+                string updateCodes = @"UPDATE tbl_User SET login_code =
+                    RIGHT('00' + CAST(id AS VARCHAR),
                         CASE WHEN id < 10 THEN 2
                              WHEN id < 100 THEN 2
                              WHEN id < 1000 THEN 3
                              ELSE 4 END)
-                    WHERE login_code IS NULL;
-                    CREATE UNIQUE INDEX IX_tbl_User_login_code ON tbl_User(login_code) WHERE login_code IS NOT NULL;
-                END";
-                ExecuteNonQuery(sql);
+                    WHERE login_code IS NULL";
+                ExecuteNonQuery(updateCodes);
+
+                string addIndex = @"IF NOT EXISTS (SELECT 1 FROM sys.indexes
+                    WHERE name = 'IX_tbl_User_login_code' AND object_id = OBJECT_ID('tbl_User'))
+                    CREATE UNIQUE INDEX IX_tbl_User_login_code ON tbl_User(login_code)
+                    WHERE login_code IS NOT NULL";
+                ExecuteNonQuery(addIndex);
             }
             catch (Exception ex)
             {
