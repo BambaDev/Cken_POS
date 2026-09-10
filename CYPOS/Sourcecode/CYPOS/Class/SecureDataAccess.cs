@@ -243,28 +243,49 @@ namespace cypos
 
         #endregion
 
+        #region Login Code Migration
+
+        public static void EnsureLoginCodeColumn()
+        {
+            try
+            {
+                string sql = @"IF NOT EXISTS (SELECT 1 FROM sys.columns
+                    WHERE object_id = OBJECT_ID('tbl_User') AND name = 'login_code')
+                BEGIN
+                    ALTER TABLE tbl_User ADD login_code NVARCHAR(4) NULL;
+                    UPDATE tbl_User SET login_code = RIGHT('00' + CAST(id AS VARCHAR),
+                        CASE WHEN id < 10 THEN 2
+                             WHEN id < 100 THEN 2
+                             WHEN id < 1000 THEN 3
+                             ELSE 4 END)
+                    WHERE login_code IS NULL;
+                    CREATE UNIQUE INDEX IX_tbl_User_login_code ON tbl_User(login_code) WHERE login_code IS NOT NULL;
+                END";
+                ExecuteNonQuery(sql);
+            }
+            catch (Exception ex)
+            {
+                errorLog.Write(ex.Message, "SecureDataAccess.EnsureLoginCodeColumn", ErrorLogPath);
+            }
+        }
+
+        #endregion
+
         #region Specialized Methods for Critical Operations
 
-        /// <summary>
-        /// Authenticates a user with username and password.
-        /// Uses password hashing for secure authentication.
-        /// </summary>
-        /// <param name="username">Username to authenticate</param>
-        /// <param name="password">Plain text password to verify</param>
-        /// <param name="userType">Output parameter containing user type (Admin, Cashier, Waiter)</param>
-        /// <returns>True if authentication successful, false otherwise</returns>
-        public static bool AuthenticateUser(string username, string password, out string userType)
+        public static bool AuthenticateUser(string loginCode, string password, out string userType, out string userName)
         {
             userType = null;
+            userName = null;
 
             try
             {
-                string sql = @"SELECT user_type, password
+                string sql = @"SELECT user_name, user_type, password
                               FROM tbl_User
-                              WHERE user_name = @username";
+                              WHERE login_code = @loginCode";
 
                 SqlParameter[] parameters = {
-                    new SqlParameter("@username", SqlDbType.NVarChar, 50) { Value = username }
+                    new SqlParameter("@loginCode", SqlDbType.NVarChar, 4) { Value = loginCode }
                 };
 
                 DataTable dt = GetDataTable(sql, parameters);
@@ -276,6 +297,7 @@ namespace cypos
 
                 string storedHash = dt.Rows[0]["password"].ToString();
                 userType = dt.Rows[0]["user_type"].ToString();
+                userName = dt.Rows[0]["user_name"].ToString();
 
                 bool isValid = PasswordHelper.VerifyPassword(password, storedHash);
 
@@ -284,10 +306,10 @@ namespace cypos
                     try
                     {
                         string newHash = PasswordHelper.HashPassword(password);
-                        string updateSql = "UPDATE tbl_User SET password = @newHash WHERE user_name = @username";
+                        string updateSql = "UPDATE tbl_User SET password = @newHash WHERE login_code = @loginCode";
                         SqlParameter[] updateParams = {
                             new SqlParameter("@newHash", SqlDbType.NVarChar, 200) { Value = newHash },
-                            new SqlParameter("@username", SqlDbType.NVarChar, 50) { Value = username }
+                            new SqlParameter("@loginCode", SqlDbType.NVarChar, 4) { Value = loginCode }
                         };
                         ExecuteNonQuery(updateSql, updateParams);
                     }
@@ -304,6 +326,12 @@ namespace cypos
                 errorLog.Write(ex.Message, "SecureDataAccess.AuthenticateUser", ErrorLogPath);
                 return false;
             }
+        }
+
+        public static bool AuthenticateUser(string loginCode, string password, out string userType)
+        {
+            string userName;
+            return AuthenticateUser(loginCode, password, out userType, out userName);
         }
 
         /// <summary>
@@ -348,28 +376,42 @@ namespace cypos
 
         #region User Management Methods
 
-        /// <summary>
-        /// Creates a new user with hashed password.
-        /// </summary>
-        /// <param name="username">Username</param>
-        /// <param name="password">Plain text password (will be hashed)</param>
-        /// <param name="userType">User type (Admin, Cashier, Waiter)</param>
-        /// <param name="fullName">Full name</param>
-        /// <param name="contact">Contact number</param>
-        /// <param name="dob">Date of birth</param>
-        /// <param name="imageName">Image filename</param>
-        /// <returns>Number of rows affected</returns>
+        public static bool LoginCodeExists(string loginCode, int excludeUserId)
+        {
+            try
+            {
+                string sql = "SELECT COUNT(*) FROM tbl_User WHERE login_code = @code AND id != @excludeId";
+                SqlParameter[] parameters = {
+                    new SqlParameter("@code", SqlDbType.NVarChar, 4) { Value = loginCode },
+                    new SqlParameter("@excludeId", SqlDbType.Int) { Value = excludeUserId }
+                };
+                int count = Convert.ToInt32(ExecuteScalar(sql, parameters));
+                return count > 0;
+            }
+            catch (Exception ex)
+            {
+                errorLog.Write(ex.Message, "SecureDataAccess.LoginCodeExists", ErrorLogPath);
+                throw;
+            }
+        }
+
         public static int CreateUser(string username, string password, string userType,
                                     string fullName, string contact, DateTime dob, string imageName)
+        {
+            return CreateUser(username, password, userType, fullName, contact, dob, imageName, null);
+        }
+
+        public static int CreateUser(string username, string password, string userType,
+                                    string fullName, string contact, DateTime dob, string imageName, string loginCode)
         {
             try
             {
                 string hashedPassword = PasswordHelper.HashPassword(password);
 
                 string sql = @"INSERT INTO tbl_User
-                              (user_name, password, user_type, name, contact, dob, image_name)
+                              (user_name, password, user_type, name, contact, dob, image_name, login_code)
                               VALUES
-                              (@username, @password, @userType, @fullName, @contact, @dob, @imageName)";
+                              (@username, @password, @userType, @fullName, @contact, @dob, @imageName, @loginCode)";
 
                 SqlParameter[] parameters = {
                     new SqlParameter("@username", SqlDbType.NVarChar) { Value = username },
@@ -378,7 +420,8 @@ namespace cypos
                     new SqlParameter("@fullName", SqlDbType.NVarChar) { Value = fullName },
                     new SqlParameter("@contact", SqlDbType.NVarChar) { Value = contact ?? (object)DBNull.Value },
                     new SqlParameter("@dob", SqlDbType.DateTime) { Value = dob },
-                    new SqlParameter("@imageName", SqlDbType.NVarChar) { Value = imageName ?? (object)DBNull.Value }
+                    new SqlParameter("@imageName", SqlDbType.NVarChar) { Value = imageName ?? (object)DBNull.Value },
+                    new SqlParameter("@loginCode", SqlDbType.NVarChar, 4) { Value = loginCode ?? (object)DBNull.Value }
                 };
 
                 return ExecuteNonQuery(sql, parameters);
@@ -390,20 +433,14 @@ namespace cypos
             }
         }
 
-        /// <summary>
-        /// Updates an existing user. If password is provided, it will be hashed.
-        /// </summary>
-        /// <param name="userId">User ID to update</param>
-        /// <param name="username">New username</param>
-        /// <param name="password">New password (plain text, will be hashed) - null to keep existing</param>
-        /// <param name="userType">New user type</param>
-        /// <param name="fullName">New full name</param>
-        /// <param name="contact">New contact</param>
-        /// <param name="dob">New date of birth</param>
-        /// <param name="imageName">New image filename</param>
-        /// <returns>Number of rows affected</returns>
         public static int UpdateUser(int userId, string username, string password, string userType,
                                     string fullName, string contact, DateTime dob, string imageName)
+        {
+            return UpdateUser(userId, username, password, userType, fullName, contact, dob, imageName, null);
+        }
+
+        public static int UpdateUser(int userId, string username, string password, string userType,
+                                    string fullName, string contact, DateTime dob, string imageName, string loginCode)
         {
             try
             {
@@ -412,7 +449,6 @@ namespace cypos
 
                 if (!string.IsNullOrEmpty(password))
                 {
-                    // Update with new password
                     string hashedPassword = PasswordHelper.HashPassword(password);
 
                     sql = @"UPDATE tbl_User
@@ -422,7 +458,8 @@ namespace cypos
                                name = @fullName,
                                contact = @contact,
                                dob = @dob,
-                               image_name = @imageName
+                               image_name = @imageName,
+                               login_code = @loginCode
                            WHERE id = @userId";
 
                     parameters = new SqlParameter[] {
@@ -433,19 +470,20 @@ namespace cypos
                         new SqlParameter("@fullName", SqlDbType.NVarChar) { Value = fullName },
                         new SqlParameter("@contact", SqlDbType.NVarChar) { Value = contact ?? (object)DBNull.Value },
                         new SqlParameter("@dob", SqlDbType.DateTime) { Value = dob },
-                        new SqlParameter("@imageName", SqlDbType.NVarChar) { Value = imageName ?? (object)DBNull.Value }
+                        new SqlParameter("@imageName", SqlDbType.NVarChar) { Value = imageName ?? (object)DBNull.Value },
+                        new SqlParameter("@loginCode", SqlDbType.NVarChar, 4) { Value = loginCode ?? (object)DBNull.Value }
                     };
                 }
                 else
                 {
-                    // Update without changing password
                     sql = @"UPDATE tbl_User
                            SET user_name = @username,
                                user_type = @userType,
                                name = @fullName,
                                contact = @contact,
                                dob = @dob,
-                               image_name = @imageName
+                               image_name = @imageName,
+                               login_code = @loginCode
                            WHERE id = @userId";
 
                     parameters = new SqlParameter[] {
@@ -455,7 +493,8 @@ namespace cypos
                         new SqlParameter("@fullName", SqlDbType.NVarChar) { Value = fullName },
                         new SqlParameter("@contact", SqlDbType.NVarChar) { Value = contact ?? (object)DBNull.Value },
                         new SqlParameter("@dob", SqlDbType.DateTime) { Value = dob },
-                        new SqlParameter("@imageName", SqlDbType.NVarChar) { Value = imageName ?? (object)DBNull.Value }
+                        new SqlParameter("@imageName", SqlDbType.NVarChar) { Value = imageName ?? (object)DBNull.Value },
+                        new SqlParameter("@loginCode", SqlDbType.NVarChar, 4) { Value = loginCode ?? (object)DBNull.Value }
                     };
                 }
 

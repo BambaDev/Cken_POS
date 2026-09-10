@@ -185,7 +185,7 @@
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(108, 16);
             this.label6.TabIndex = 13;
-            this.label6.Text = "Nom d\'utilisateur:";
+            this.label6.Text = "Code de connexion:";
             // 
             // txtUsername
             // 

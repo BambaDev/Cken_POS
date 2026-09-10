@@ -89,51 +89,64 @@ namespace cypos
             pnlLogin.Location = this.PointToClient(pt);
             pnlLogin.BringToFront();
 
+            txtUserName.MaxLength = 4;
+            txtUserName.KeyPress += txtUserName_KeyPress;
+
+            SecureDataAccess.EnsureLoginCodeColumn();
+
             btnExit.Enabled = false;
             WireAllControls(keyPad1);
+        }
+
+        private void txtUserName_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar))
+                e.Handled = true;
         }
 
         private void btnLogin_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtUserName.Text))
             {
-                Messages.WarningMessage("Please enter username");
+                Messages.WarningMessage("Veuillez entrer votre code de connexion");
                 txtUserName.Focus();
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(txtPassword.Text))
             {
-                Messages.WarningMessage("Please enter password");
+                Messages.WarningMessage("Veuillez entrer votre mot de passe");
                 txtPassword.Focus();
                 return;
             }
 
-            string username = txtUserName.Text.Trim();
+            string loginCode = txtUserName.Text.Trim();
 
-            if (LoginThrottler.IsLockedOut(username))
+            if (LoginThrottler.IsLockedOut(loginCode))
             {
-                int seconds = LoginThrottler.RemainingLockoutSeconds(username);
+                int seconds = LoginThrottler.RemainingLockoutSeconds(loginCode);
                 lblmsg.Visible = true;
-                lblmsg.Text = string.Format("Account locked. Try again in {0} min", (seconds / 60) + 1);
+                lblmsg.Text = string.Format("Compte verrouille. Reessayez dans {0} min", (seconds / 60) + 1);
                 return;
             }
 
             try
             {
                 string userType;
+                string userName;
                 bool authenticated = SecureDataAccess.AuthenticateUser(
-                    username,
+                    loginCode,
                     txtPassword.Text,
-                    out userType
+                    out userType,
+                    out userName
                 );
 
                 if (authenticated)
                 {
-                    LoginThrottler.RecordSuccess(username);
-                    AuditLog.LogLogin(username, true);
+                    LoginThrottler.RecordSuccess(loginCode);
+                    AuditLog.LogLogin(userName, true);
 
-                    UserInfo.UserName = username;
+                    UserInfo.UserName = userName;
                     UserInfo.UserType = userType;
 
                     WriteLoginRecords();
@@ -144,20 +157,20 @@ namespace cypos
                 }
                 else
                 {
-                    LoginThrottler.RecordFailedAttempt(username);
-                    AuditLog.LogLogin(username, false);
+                    LoginThrottler.RecordFailedAttempt(loginCode);
+                    AuditLog.LogLogin(loginCode, false);
 
                     lblmsg.Visible = true;
-                    lblmsg.Text = "Username or Password does not match";
+                    lblmsg.Text = "Code ou mot de passe incorrect";
                     txtPassword.Clear();
                     txtPassword.Focus();
                 }
             }
             catch (Exception ex)
             {
-                Messages.ExceptionMessage("Login error: " + ex.Message);
+                Messages.ExceptionMessage("Erreur de connexion: " + ex.Message);
                 lblmsg.Visible = true;
-                lblmsg.Text = "An error occurred during login. Please try again.";
+                lblmsg.Text = "Une erreur est survenue. Veuillez reessayer.";
             }
         }
 

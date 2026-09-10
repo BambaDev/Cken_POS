@@ -61,17 +61,16 @@ namespace cypos
 
             DataTable dtUser = SecureDataAccess.GetDataTable(strSQL, parameters);
 
-            //lblUid.Text = dtUser.Rows[0]["id"].ToString();
             txtUserFullName.Text = dtUser.Rows[0]["name"].ToString();
             txtAddress.Text = dtUser.Rows[0]["address"].ToString();
             txtEmailaddress.Text = dtUser.Rows[0]["email"].ToString();
             txtContact.Text = dtUser.Rows[0]["contact"].ToString();
-            dtDOB.Value =DateTime.Parse(dtUser.Rows[0]["dob"].ToString());
-            txtUsername.Text = dtUser.Rows[0]["user_name"].ToString();
-            // SECURITY FIX: Do NOT display the hashed password - leave field empty for updates
+            dtDOB.Value = DateTime.Parse(dtUser.Rows[0]["dob"].ToString());
+            txtUsername.Text = dtUser.Rows[0]["login_code"] != DBNull.Value
+                ? dtUser.Rows[0]["login_code"].ToString() : "";
             txtPassword.Text = string.Empty;
-            lblImageName.Text =dtUser.Rows[0]["image_name"].ToString();
-                        
+            lblImageName.Text = dtUser.Rows[0]["image_name"].ToString();
+
             string path = Application.StartupPath + @"\Images\" + dtUser.Rows[0]["image_name"].ToString() + "";
             pbxUserImage.ImageLocation = path;
             pbxUserImage.InitialImage.Dispose();
@@ -111,13 +110,21 @@ namespace cypos
         private void frmUser_Load(object sender, EventArgs e)
         {
             try
-            { 
+            {
+                txtUsername.MaxLength = 4;
+                txtUsername.KeyPress += txtLoginCode_KeyPress;
                 Clear();
             }
             catch (Exception ex)
             {
                 Messages.ExceptionMessage(ex.Message);
             }
+        }
+
+        private void txtLoginCode_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar))
+                e.Handled = true;
         }
 
 
@@ -133,7 +140,8 @@ namespace cypos
                 DataTable dt;
                 if (SearchText != string.Empty)
                 {
-                    strSQL = @"SELECT * FROM tbl_User WHERE name like @searchText + '%'
+                    strSQL = @"SELECT * FROM tbl_User WHERE name LIKE @searchText + '%'
+                              OR login_code LIKE @searchText + '%'
                               OR user_name LIKE @searchText + '%'
                               OR contact LIKE @searchText + '%'";
 
@@ -190,8 +198,10 @@ namespace cypos
 
                     btnUser.Size = new Size(148, 200);
 
-                    btnUser.Text += "\n UId: " + dataReader["user_name"];
-                    btnUser.Text += "\n Name: " + dataReader["name"].ToString();
+                    string code = dataReader["login_code"] != DBNull.Value
+                        ? dataReader["login_code"].ToString() : "-";
+                    btnUser.Text += "\n Code: " + code;
+                    btnUser.Text += "\n " + dataReader["name"].ToString();
 
                     btnUser.Font = new Font("Tahoma", 9, FontStyle.Regular, GraphicsUnit.Point);
                     btnUser.TextAlign = ContentAlignment.BottomCenter;
@@ -243,56 +253,62 @@ namespace cypos
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            
-            if (txtUserFullName.Text == "" )
+            if (txtUserFullName.Text == "")
             {
-                Messages.InformationMessage("Please enter user's full name");
+                Messages.InformationMessage("Veuillez entrer le nom complet");
                 txtUserFullName.Focus();
             }
             else if (txtAddress.Text == "")
             {
-                Messages.InformationMessage("Please enter address");
+                Messages.InformationMessage("Veuillez entrer l'adresse");
                 txtAddress.Focus();
             }
-            else if (txtContact.Text == ""  )
+            else if (txtContact.Text == "")
             {
-                Messages.InformationMessage("Please enter contact nos.");
+                Messages.InformationMessage("Veuillez entrer le numero de contact");
                 txtContact.Focus();
             }
             else if (txtEmailaddress.Text == "")
             {
-                Messages.InformationMessage("Please enter email address");
+                Messages.InformationMessage("Veuillez entrer l'adresse email");
                 txtEmailaddress.Focus();
             }
             else if (txtUsername.Text == "")
             {
-                Messages.InformationMessage("Please enter user name");
+                Messages.InformationMessage("Veuillez entrer le code de connexion (2-4 chiffres)");
+                txtUsername.Focus();
+            }
+            else if (!InputValidator.IsValidLoginCode(txtUsername.Text))
+            {
+                Messages.InformationMessage("Le code de connexion doit contenir 2 a 4 chiffres");
                 txtUsername.Focus();
             }
             else if (txtPassword.Text == "" && lblUid.Text == "-")
             {
-                Messages.InformationMessage("Please enter password");
+                Messages.InformationMessage("Veuillez entrer le mot de passe");
                 txtPassword.Focus();
             }
             else if (txtPassword.Text != "" && !ValidatePassword(txtPassword.Text))
             {
                 txtPassword.Focus();
             }
-            else if (!InputValidator.IsValidUsername(txtUsername.Text))
-            {
-                Messages.InformationMessage("Username must be 3-50 characters (letters, numbers, underscore)");
-                txtUsername.Focus();
-            }
             else if (!rdbAdmin.Checked && !rdbCashier.Checked && !rdbWaiter.Checked)
             {
-                Messages.InformationMessage("Please select user type");
+                Messages.InformationMessage("Veuillez selectionner le type d'utilisateur");
             }
             else
             {
                 try
-                {                     
-                    
-                    string strUserType=string.Empty;
+                {
+                    int excludeId = lblUid.Text == "-" ? 0 : Convert.ToInt32(lblUid.Text);
+                    if (SecureDataAccess.LoginCodeExists(txtUsername.Text.Trim(), excludeId))
+                    {
+                        Messages.InformationMessage("Ce code de connexion est deja utilise par un autre utilisateur");
+                        txtUsername.Focus();
+                        return;
+                    }
+
+                    string strUserType = string.Empty;
                     if (rdbAdmin.Checked)
                     {
                         strUserType = "Admin";
@@ -305,17 +321,18 @@ namespace cypos
                     {
                         strUserType = "Waiter";
                     }
-                    if(lblUid.Text == "-")
+
+                    string loginCode = txtUsername.Text.Trim();
+                    string userName = txtUserFullName.Text.Trim();
+
+                    if (lblUid.Text == "-")
                     {
-                        // CREATE NEW USER with secure password hashing
-                        string strImageName = txtUsername.Text + lblFileExtension.Text;
+                        string strImageName = loginCode + lblFileExtension.Text;
 
-                        // Use SecureDataAccess with parameterized query and password hashing
-                        string strSQLInsert = @"INSERT INTO tbl_User (name, address, contact, email, dob, user_name, password, user_type, image_name)
-                                               VALUES (@name, @address, @contact, @email, @dob, @userName, @password, @userType, @imageName)";
-
-                        // Hash the password before storing
                         string hashedPassword = PasswordHelper.HashPassword(txtPassword.Text);
+
+                        string strSQLInsert = @"INSERT INTO tbl_User (name, address, contact, email, dob, user_name, password, user_type, image_name, login_code)
+                                               VALUES (@name, @address, @contact, @email, @dob, @userName, @password, @userType, @imageName, @loginCode)";
 
                         System.Data.SqlClient.SqlParameter[] parameters = {
                             new System.Data.SqlClient.SqlParameter("@name", System.Data.SqlDbType.NVarChar, 100) { Value = txtUserFullName.Text },
@@ -323,16 +340,16 @@ namespace cypos
                             new System.Data.SqlClient.SqlParameter("@contact", System.Data.SqlDbType.NVarChar, 20) { Value = txtContact.Text ?? (object)System.DBNull.Value },
                             new System.Data.SqlClient.SqlParameter("@email", System.Data.SqlDbType.NVarChar, 100) { Value = txtEmailaddress.Text ?? (object)System.DBNull.Value },
                             new System.Data.SqlClient.SqlParameter("@dob", System.Data.SqlDbType.Date) { Value = dtDOB.Value },
-                            new System.Data.SqlClient.SqlParameter("@userName", System.Data.SqlDbType.NVarChar, 50) { Value = txtUsername.Text },
+                            new System.Data.SqlClient.SqlParameter("@userName", System.Data.SqlDbType.NVarChar, 50) { Value = userName },
                             new System.Data.SqlClient.SqlParameter("@password", System.Data.SqlDbType.NVarChar, 256) { Value = hashedPassword },
                             new System.Data.SqlClient.SqlParameter("@userType", System.Data.SqlDbType.NVarChar, 20) { Value = strUserType },
-                            new System.Data.SqlClient.SqlParameter("@imageName", System.Data.SqlDbType.NVarChar, 100) { Value = strImageName }
+                            new System.Data.SqlClient.SqlParameter("@imageName", System.Data.SqlDbType.NVarChar, 100) { Value = strImageName },
+                            new System.Data.SqlClient.SqlParameter("@loginCode", System.Data.SqlDbType.NVarChar, 4) { Value = loginCode }
                         };
 
                         SecureDataAccess.ExecuteNonQuery(strSQLInsert, parameters);
-                        AuditLog.LogUserAction("CREATE", "User", txtUsername.Text);
+                        AuditLog.LogUserAction("CREATE", "User", userName);
 
-                        //Picture Upload
                         string strPath = Application.StartupPath + @"\Images\";
                         System.GC.Collect();
                         System.GC.WaitForPendingFinalizers();
@@ -346,27 +363,23 @@ namespace cypos
                         Messages.SavedMessage();
                         Clear();
                     }
-                    else // Update info
+                    else
                     {
-                        // UPDATE EXISTING USER with secure password hashing
                         string imageName;
                         if (lblFileExtension.Text == "user.png")
                         {
-                            imageName = lblImageName.Text;  //Unchange pictures
+                            imageName = lblImageName.Text;
                         }
-                        else  //When change
+                        else
                         {
                             imageName = lblImageName.Text;
                         }
 
-                        // Check if password was changed
-                        // Note: If the field is empty or unchanged, we should not update the password
                         string strSQLUpdate;
                         System.Data.SqlClient.SqlParameter[] parameters;
 
                         if (!string.IsNullOrWhiteSpace(txtPassword.Text))
                         {
-                            // Password is being updated - hash it
                             string hashedPassword = PasswordHelper.HashPassword(txtPassword.Text);
 
                             strSQLUpdate = @"UPDATE tbl_User
@@ -378,7 +391,8 @@ namespace cypos
                                                 user_name = @userName,
                                                 password = @password,
                                                 image_name = @imageName,
-                                                user_type = @userType
+                                                user_type = @userType,
+                                                login_code = @loginCode
                                             WHERE id = @userId";
 
                             parameters = new System.Data.SqlClient.SqlParameter[] {
@@ -387,16 +401,16 @@ namespace cypos
                                 new System.Data.SqlClient.SqlParameter("@email", System.Data.SqlDbType.NVarChar, 100) { Value = txtEmailaddress.Text ?? (object)System.DBNull.Value },
                                 new System.Data.SqlClient.SqlParameter("@contact", System.Data.SqlDbType.NVarChar, 20) { Value = txtContact.Text ?? (object)System.DBNull.Value },
                                 new System.Data.SqlClient.SqlParameter("@dob", System.Data.SqlDbType.Date) { Value = dtDOB.Value },
-                                new System.Data.SqlClient.SqlParameter("@userName", System.Data.SqlDbType.NVarChar, 50) { Value = txtUsername.Text },
+                                new System.Data.SqlClient.SqlParameter("@userName", System.Data.SqlDbType.NVarChar, 50) { Value = userName },
                                 new System.Data.SqlClient.SqlParameter("@password", System.Data.SqlDbType.NVarChar, 256) { Value = hashedPassword },
                                 new System.Data.SqlClient.SqlParameter("@imageName", System.Data.SqlDbType.NVarChar, 100) { Value = imageName },
                                 new System.Data.SqlClient.SqlParameter("@userType", System.Data.SqlDbType.NVarChar, 20) { Value = strUserType },
+                                new System.Data.SqlClient.SqlParameter("@loginCode", System.Data.SqlDbType.NVarChar, 4) { Value = loginCode },
                                 new System.Data.SqlClient.SqlParameter("@userId", System.Data.SqlDbType.Int) { Value = Convert.ToInt32(lblUid.Text) }
                             };
                         }
                         else
                         {
-                            // Password not being updated - exclude from UPDATE
                             strSQLUpdate = @"UPDATE tbl_User
                                             SET name = @name,
                                                 address = @address,
@@ -405,7 +419,8 @@ namespace cypos
                                                 dob = @dob,
                                                 user_name = @userName,
                                                 image_name = @imageName,
-                                                user_type = @userType
+                                                user_type = @userType,
+                                                login_code = @loginCode
                                             WHERE id = @userId";
 
                             parameters = new System.Data.SqlClient.SqlParameter[] {
@@ -414,9 +429,10 @@ namespace cypos
                                 new System.Data.SqlClient.SqlParameter("@email", System.Data.SqlDbType.NVarChar, 100) { Value = txtEmailaddress.Text ?? (object)System.DBNull.Value },
                                 new System.Data.SqlClient.SqlParameter("@contact", System.Data.SqlDbType.NVarChar, 20) { Value = txtContact.Text ?? (object)System.DBNull.Value },
                                 new System.Data.SqlClient.SqlParameter("@dob", System.Data.SqlDbType.Date) { Value = dtDOB.Value },
-                                new System.Data.SqlClient.SqlParameter("@userName", System.Data.SqlDbType.NVarChar, 50) { Value = txtUsername.Text },
+                                new System.Data.SqlClient.SqlParameter("@userName", System.Data.SqlDbType.NVarChar, 50) { Value = userName },
                                 new System.Data.SqlClient.SqlParameter("@imageName", System.Data.SqlDbType.NVarChar, 100) { Value = imageName },
                                 new System.Data.SqlClient.SqlParameter("@userType", System.Data.SqlDbType.NVarChar, 20) { Value = strUserType },
+                                new System.Data.SqlClient.SqlParameter("@loginCode", System.Data.SqlDbType.NVarChar, 4) { Value = loginCode },
                                 new System.Data.SqlClient.SqlParameter("@userId", System.Data.SqlDbType.Int) { Value = Convert.ToInt32(lblUid.Text) }
                             };
                         }
@@ -424,7 +440,6 @@ namespace cypos
                         SecureDataAccess.ExecuteNonQuery(strSQLUpdate, parameters);
                         AuditLog.LogUserAction("UPDATE", "User", lblUid.Text);
 
-                        //Update image
                         if (lblFileExtension.Text != "user.png")
                         {
                             pbxUserImage.InitialImage.Dispose();
@@ -437,10 +452,8 @@ namespace cypos
                             System.IO.File.Move(path + @"\" + openFileDialog1.SafeFileName, path + @"\" + imageName);
                         }
 
-                        //Messages.UpdatedMessage();
                         Clear();
                     }
- 
                 }
                 catch (Exception ex)
                 {

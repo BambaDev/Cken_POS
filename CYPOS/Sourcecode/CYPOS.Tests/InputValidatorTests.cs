@@ -71,6 +71,50 @@ namespace CYPOS.Tests
 
         #endregion
 
+        #region Login Code Validation
+
+        [Test]
+        public void IsValidLoginCode_TwoDigits_ReturnsTrue()
+        {
+            Assert.IsTrue(InputValidator.IsValidLoginCode("01"));
+            Assert.IsTrue(InputValidator.IsValidLoginCode("99"));
+        }
+
+        [Test]
+        public void IsValidLoginCode_ThreeOrFourDigits_ReturnsTrue()
+        {
+            Assert.IsTrue(InputValidator.IsValidLoginCode("123"));
+            Assert.IsTrue(InputValidator.IsValidLoginCode("9999"));
+        }
+
+        [Test]
+        public void IsValidLoginCode_OneDigit_ReturnsFalse()
+        {
+            Assert.IsFalse(InputValidator.IsValidLoginCode("1"));
+        }
+
+        [Test]
+        public void IsValidLoginCode_FiveDigits_ReturnsFalse()
+        {
+            Assert.IsFalse(InputValidator.IsValidLoginCode("12345"));
+        }
+
+        [Test]
+        public void IsValidLoginCode_Letters_ReturnsFalse()
+        {
+            Assert.IsFalse(InputValidator.IsValidLoginCode("AB"));
+            Assert.IsFalse(InputValidator.IsValidLoginCode("1A"));
+        }
+
+        [Test]
+        public void IsValidLoginCode_Empty_ReturnsFalse()
+        {
+            Assert.IsFalse(InputValidator.IsValidLoginCode(""));
+            Assert.IsFalse(InputValidator.IsValidLoginCode(null));
+        }
+
+        #endregion
+
         #region Password Validation
 
         [Test]
@@ -85,8 +129,16 @@ namespace CYPOS.Tests
         public void IsValidPassword_TooShort_ReturnsFalse()
         {
             string error;
-            Assert.IsFalse(InputValidator.IsValidPassword("12345", out error));
+            Assert.IsFalse(InputValidator.IsValidPassword("123", out error));
             Assert.IsNotNull(error);
+        }
+
+        [Test]
+        public void IsValidPassword_FourChars_ReturnsTrue()
+        {
+            string error;
+            Assert.IsTrue(InputValidator.IsValidPassword("1234", out error));
+            Assert.IsNull(error);
         }
 
         [Test]

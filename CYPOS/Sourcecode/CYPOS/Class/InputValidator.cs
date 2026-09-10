@@ -38,25 +38,40 @@ namespace cypos
             return UsernameRegex.IsMatch(username.Trim());
         }
 
+        public static bool IsValidLoginCode(string code)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+                return false;
+            string trimmed = code.Trim();
+            if (trimmed.Length < 2 || trimmed.Length > 4)
+                return false;
+            for (int i = 0; i < trimmed.Length; i++)
+            {
+                if (!char.IsDigit(trimmed[i]))
+                    return false;
+            }
+            return true;
+        }
+
         public static bool IsValidPassword(string password, out string errorMessage)
         {
             errorMessage = null;
 
             if (string.IsNullOrEmpty(password))
             {
-                errorMessage = "Password cannot be empty";
+                errorMessage = "Le mot de passe ne peut pas etre vide";
                 return false;
             }
 
-            if (password.Length < 6)
+            if (password.Length < 4)
             {
-                errorMessage = "Password must be at least 6 characters";
+                errorMessage = "Le mot de passe doit contenir au moins 4 caracteres";
                 return false;
             }
 
             if (password.Length > 100)
             {
-                errorMessage = "Password must not exceed 100 characters";
+                errorMessage = "Le mot de passe ne doit pas depasser 100 caracteres";
                 return false;
             }
 
